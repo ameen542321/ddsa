@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::table('security_events', function (Blueprint $table) {
             $table->foreignId('verified_by')->nullable()->after('acknowledged_by')->constrained('users')->nullOnDelete();
             $table->text('verification_note')->nullable()->after('resolution');
-            $table->timestamp('verified_at')->nullable()->after('resolved_at');
+            $table->dateTime('verified_at')->nullable()->after('resolved_at');
             $table->string('response_action', 40)->nullable()->after('verification_note');
-            $table->timestamp('response_expires_at')->nullable()->after('response_action');
+            $table->dateTime('response_expires_at')->nullable()->after('response_action');
         });
     }
 

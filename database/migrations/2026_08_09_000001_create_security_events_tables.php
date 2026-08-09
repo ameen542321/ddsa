@@ -29,12 +29,13 @@ return new class extends Migration
             $table->text('resolution')->nullable();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('acknowledged_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamp('first_seen_at');
-            $table->timestamp('last_seen_at');
-            $table->timestamp('detected_at');
-            $table->timestamp('acknowledged_at')->nullable();
-            $table->timestamp('contained_at')->nullable();
-            $table->timestamp('resolved_at')->nullable();
+            // DATETIME متوافق مع إصدارات MySQL/MariaDB التي ترفض عدة أعمدة TIMESTAMP إلزامية بلا قيم افتراضية.
+            $table->dateTime('first_seen_at');
+            $table->dateTime('last_seen_at');
+            $table->dateTime('detected_at');
+            $table->dateTime('acknowledged_at')->nullable();
+            $table->dateTime('contained_at')->nullable();
+            $table->dateTime('resolved_at')->nullable();
             $table->timestamps();
 
             $table->index(['fingerprint', 'status', 'last_seen_at'], 'security_events_grouping_index');

@@ -1,3 +1,4 @@
+{{-- مكوّن تحميل CARLED المستوحى من السيارة وإضاءة LED — تاريخ الإضافة: 2026-08-09. --}}
 <div class="ui-page-loader" data-ui-page-loader role="status" aria-live="polite" aria-label="جاري تجهيز النظام">
     <div class="ui-page-loader__content">
         <div class="ui-page-loader__brand" aria-hidden="true">

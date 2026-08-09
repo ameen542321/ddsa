@@ -2537,6 +2537,7 @@ html.ui-font-loading body > :not(.ui-page-loader) {
         gap: 1rem;
     }
 
+    /* مكوّن تحميل CARLED: سيارة أمامية وإضاءة LED — تاريخ الإضافة: 2026-08-09. */
     .ui-page-loader {
         position: fixed;
         inset: 0;

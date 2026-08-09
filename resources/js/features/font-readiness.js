@@ -1,3 +1,4 @@
+// شاشة تحميل CARLED وربطها بجاهزية خط Cairo — تاريخ التعديل: 2026-08-09.
 const root = document.documentElement;
 
 if (root.classList.contains('ui-font-loading')) {
