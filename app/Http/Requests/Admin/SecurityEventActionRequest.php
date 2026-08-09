@@ -15,8 +15,9 @@ class SecurityEventActionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => ['required', Rule::in(['acknowledge', 'contain', 'resolve', 'false_positive', 'block_source'])],
-            'note' => [Rule::requiredIf(in_array($this->input('action'), ['contain', 'resolve', 'false_positive', 'block_source'], true)), 'nullable', 'string', 'min:5', 'max:1000'],
+            'action' => ['required', Rule::in(['acknowledge', 'assign', 'add_note', 'contain', 'resolve', 'false_positive', 'block_source'])],
+            'note' => [Rule::requiredIf(in_array($this->input('action'), ['add_note', 'contain', 'resolve', 'false_positive', 'block_source'], true)), 'nullable', 'string', 'min:5', 'max:1000'],
+            'assigned_to' => [Rule::requiredIf($this->input('action') === 'assign'), 'nullable', 'integer', Rule::exists('users', 'id')->where('role', 'admin')],
         ];
     }
 }

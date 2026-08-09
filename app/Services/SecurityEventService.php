@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SecurityEvent;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -48,7 +49,7 @@ class SecurityEventService
             $actor = $context['actor'] ?? null;
             $target = $context['target'] ?? null;
 
-            return SecurityEvent::create([
+            $event = SecurityEvent::create([
                 'event_code' => $code,
                 'category' => $category,
                 'severity' => $severity,
@@ -70,10 +71,33 @@ class SecurityEventService
                 'last_seen_at' => $now,
                 'detected_at' => $now,
             ]);
+
+            if (in_array($severity, ['high', 'critical'], true)) {
+                DB::afterCommit(function () use ($event, $title, $severity) {
+                    $adminIds = User::query()->where('role', User::ROLE_ADMIN)->pluck('id')->all();
+
+                    if ($adminIds !== []) {
+                        Notification::create([
+                            'sender_id' => null,
+                            'sender_type' => 'system',
+                            'target_type' => 'users',
+                            'target_ids' => $adminIds,
+                            'title' => $severity === 'critical' ? 'حالة استنفار أمني' : 'بلاغ أمني مرتفع',
+                            'message' => $title.' — افتح مركز القيادة الأمنية لمراجعة التقرير.',
+                            'template_key' => null,
+                            'channel' => 'site',
+                            'read_by' => [],
+                            'data' => ['security_event_id' => $event->id],
+                        ]);
+                    }
+                });
+            }
+
+            return $event;
         });
     }
 
-    public function transition(SecurityEvent $event, User $admin, string $action, ?string $note = null): SecurityEvent
+    public function transition(SecurityEvent $event, User $admin, string $action, ?string $note = null, ?int $assignedTo = null): SecurityEvent
     {
         $transitions = [
             'acknowledge' => 'investigating',
@@ -83,12 +107,16 @@ class SecurityEventService
         ];
         $to = $transitions[$action] ?? $event->status;
 
-        return DB::transaction(function () use ($event, $admin, $action, $note, $to) {
+        return DB::transaction(function () use ($event, $admin, $action, $note, $assignedTo, $to) {
             $from = $event->status;
             $changes = ['status' => $to];
 
             if ($action === 'acknowledge') {
                 $changes += ['acknowledged_by' => $admin->id, 'assigned_to' => $admin->id, 'acknowledged_at' => now()];
+            } elseif ($action === 'assign') {
+                $changes['assigned_to'] = $assignedTo;
+            } elseif ($action === 'add_note') {
+                $changes = [];
             } elseif ($action === 'contain') {
                 $changes['contained_at'] = now();
             } elseif (in_array($action, ['resolve', 'false_positive'], true)) {
@@ -100,7 +128,9 @@ class SecurityEventService
                 $changes += ['status' => 'contained', 'contained_at' => now()];
             }
 
-            $event->update($changes);
+            if ($changes !== []) {
+                $event->update($changes);
+            }
             $event->activities()->create([
                 'user_id' => $admin->id,
                 'action' => $action,
