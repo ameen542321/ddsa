@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Services\SecurityEventService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class SecurityCommandCenterTest extends TestCase
@@ -151,5 +153,20 @@ class SecurityCommandCenterTest extends TestCase
             'note' => 'ثبت أن البلاغ إنذار كاذب وتم التراجع.',
         ])->assertRedirect();
         $this->assertFalse($target->refresh()->must_reset_password);
+    }
+
+    public function test_active_admin_check_is_throttled_to_protect_hosting_resources(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->saveQuietly();
+        Cache::forget('security:maintenance:health-lock');
+        Artisan::shouldReceive('call')->once()->with('security:health-check')->andReturn(0);
+
+        $this->actingAs($admin)->postJson(route('admin.security.maintenance.check'), ['automatic' => true])
+            ->assertOk()
+            ->assertJsonPath('status', 'completed');
+        $this->actingAs($admin)->postJson(route('admin.security.maintenance.check'), ['automatic' => true])
+            ->assertOk()
+            ->assertJsonPath('status', 'skipped');
     }
 }
