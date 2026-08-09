@@ -1,5 +1,5 @@
 {{-- مكوّن تحميل CARLED المستوحى من السيارة وإضاءة LED — تاريخ الإضافة: 2026-08-09. --}}
-<div class="ui-page-loader" data-ui-page-loader role="status" aria-live="polite" aria-label="جاري تجهيز النظام">
+<div class="ui-page-loader" data-ui-page-loader role="status" aria-live="polite" aria-label="جاري التحميل">
     <div class="ui-page-loader__content">
         <div class="ui-page-loader__brand" aria-hidden="true">
             <span class="ui-page-loader__brand-dot"></span>
@@ -23,11 +23,9 @@
         </div>
 
         <div class="ui-page-loader__copy">
-            <strong>جاري تشغيل أنظمة القيادة</strong>
-            <span>نفحص الاتصال ونجهّز إضاءة الطريق…</span>
+            <strong>جاري التحميل</strong>
         </div>
 
         <div class="ui-page-loader__progress" aria-hidden="true"><span></span></div>
-        <span class="sr-only">يرجى الانتظار، يتم تحميل الصفحة الآن.</span>
     </div>
 </div>
