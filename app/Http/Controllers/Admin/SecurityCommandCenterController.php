@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SecurityEventActionRequest;
 use App\Models\SecurityEvent;
+use App\Models\User;
 use App\Services\SecurityEventService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class SecurityCommandCenterController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('viewAny', SecurityEvent::class);
+
         $filters = $request->validate([
             'severity' => ['nullable', 'in:info,low,medium,high,critical'],
             'status' => ['nullable', 'in:new,investigating,contained,resolved,false_positive'],
@@ -49,13 +53,26 @@ class SecurityCommandCenterController extends Controller
 
     public function show(SecurityEvent $securityEvent): View
     {
-        return view('admin.security.show', ['event' => $securityEvent->load(['activities.user', 'assignee', 'acknowledger'])]);
+        Gate::authorize('view', $securityEvent);
+
+        return view('admin.security.show', [
+            'event' => $securityEvent->load(['activities.user', 'assignee', 'acknowledger']),
+            'admins' => User::query()->where('role', User::ROLE_ADMIN)->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function action(SecurityEventActionRequest $request, SecurityEvent $securityEvent, SecurityEventService $security): mixed
     {
+        Gate::authorize('update', $securityEvent);
+
         $validated = $request->validated();
-        $security->transition($securityEvent, $request->user('web'), $validated['action'], $validated['note'] ?? null);
+        $security->transition(
+            $securityEvent,
+            $request->user('web'),
+            $validated['action'],
+            $validated['note'] ?? null,
+            $validated['assigned_to'] ?? null,
+        );
 
         return back()->with('success', 'تم تنفيذ الأمر وتوثيقه في سجل الحادث.');
     }

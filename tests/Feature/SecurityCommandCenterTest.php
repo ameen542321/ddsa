@@ -59,6 +59,28 @@ class SecurityCommandCenterTest extends TestCase
         $this->assertDatabaseHas('security_event_activities', ['security_event_id' => $event->id, 'user_id' => $admin->id, 'action' => 'resolve']);
     }
 
+    public function test_admin_can_assign_incident_and_add_investigation_note(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->saveQuietly();
+        $assignee = User::factory()->create();
+        $assignee->forceFill(['role' => 'admin'])->saveQuietly();
+        $event = app(SecurityEventService::class)->record('TEST.ASSIGN', 'testing', 'medium', 'بلاغ للتعيين');
+
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), [
+            'action' => 'assign',
+            'assigned_to' => $assignee->id,
+        ])->assertRedirect();
+
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), [
+            'action' => 'add_note',
+            'note' => 'تمت مراجعة الأدلة ويحتاج البلاغ إلى متابعة إضافية.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('security_events', ['id' => $event->id, 'assigned_to' => $assignee->id]);
+        $this->assertDatabaseHas('security_event_activities', ['security_event_id' => $event->id, 'action' => 'add_note']);
+    }
+
     public function test_failed_logins_are_limited_without_suspending_victim(): void
     {
         $user = User::factory()->create(['email' => 'victim@example.test', 'password' => Hash::make('correct-password')]);
