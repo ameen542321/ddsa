@@ -17,18 +17,24 @@ if (root.classList.contains('ui-font-loading')) {
             root.classList.remove('ui-font-loading');
             const loader = document.querySelector('[data-ui-page-loader]');
             loader?.setAttribute('aria-hidden', 'true');
-            window.setTimeout(() => loader?.remove(), 350);
+            window.setTimeout(() => {
+                loader?.remove();
+                document.dispatchEvent(new CustomEvent('ui:page-ready'));
+            }, 350);
         }, remaining);
     };
 
-    if (!document.fonts?.load) {
-        revealPage();
-    } else {
-        Promise.all([
+    const fontsReady = document.fonts?.load
+        ? Promise.all([
             document.fonts.load('400 1rem "Cairo"', 'الخط'),
             document.fonts.load('900 1rem "Cairo"', 'الخط'),
-        ]).then(revealPage, revealPage);
-    }
+        ]).catch(() => undefined)
+        : Promise.resolve();
+    const pageLoaded = document.readyState === 'complete'
+        ? Promise.resolve()
+        : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
 
-    window.setTimeout(revealPage, 5000);
+    Promise.all([fontsReady, pageLoaded]).then(revealPage);
+
+    window.setTimeout(revealPage, 8000);
 }
