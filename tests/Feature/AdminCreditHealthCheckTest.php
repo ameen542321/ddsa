@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Tests\TestCase;
 
@@ -27,6 +28,7 @@ class AdminCreditHealthCheckTest extends TestCase
             'salary' => 1000,
             'status' => 'active',
         ]);
+        DB::statement('PRAGMA defer_foreign_keys = ON');
 
         CreditSale::create([
             'store_id' => $store->id,
@@ -39,6 +41,7 @@ class AdminCreditHealthCheckTest extends TestCase
             'date' => '2026-07-18',
             'status' => CreditSale::STATUS_PENDING,
             'month' => '2026-07',
+            'added_by' => $owner->id,
         ]);
 
         $mismatchCredit = CreditSale::create([
@@ -52,6 +55,7 @@ class AdminCreditHealthCheckTest extends TestCase
             'date' => '2026-07-18',
             'status' => CreditSale::STATUS_PENDING,
             'month' => '2026-07',
+            'added_by' => $owner->id,
         ]);
         $mismatchCredit->collections()->create([
             'store_id' => $store->id,
@@ -77,6 +81,7 @@ class AdminCreditHealthCheckTest extends TestCase
             'date' => '2026-07-18',
             'status' => CreditSale::STATUS_PENDING,
             'month' => '2026-07',
+            'added_by' => $owner->id,
         ]);
 
         $response = app(CreditHealthCheckController::class)->index();

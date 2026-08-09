@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ProductFraction;
 use App\Services\NotificationService;
 use App\Traits\BelongsToStore;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class Product extends Model
 {
-    use SoftDeletes, BelongsToStore;
+    use HasFactory, SoftDeletes, BelongsToStore;
 
     public const INVENTORY_AUDIT_CONFIRMED_TYPE = 'stock_audit_confirmed';
     public const USAGE_TYPE_SALE = 'sale';

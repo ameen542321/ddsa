@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class AccountantDashboardAlertsComponentTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_active_reference_alert_displays_the_arabic_weekday_name(): void
     {
         $html = Blade::render(

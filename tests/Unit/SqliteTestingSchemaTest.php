@@ -21,6 +21,7 @@ class SqliteTestingSchemaTest extends TestCase
 
         $this->assertContains('users', $tables);
         $this->assertContains('stores', $tables);
+        $this->assertContains('onesignal_settings', $tables);
         $this->assertContains('security_events', $tables);
         $this->assertContains('security_event_activities', $tables);
         $this->assertNotContains('migrations', $tables);

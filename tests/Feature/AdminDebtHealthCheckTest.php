@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Tests\TestCase;
 
@@ -27,6 +28,7 @@ class AdminDebtHealthCheckTest extends TestCase
             'salary' => 1000,
             'status' => 'active',
         ]);
+        DB::statement('PRAGMA defer_foreign_keys = ON');
 
         Debt::create($this->debtPayload($store->id, 999999, $owner->id, [
             'amount' => 100,
