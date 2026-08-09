@@ -6,6 +6,17 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    /**
+     * تستخدم اختبارات SQLite هيكلًا نهائيًا موحدًا بدل تشغيل سجل migrations الإنتاجي الطويل.
+     */
+    protected function migrateFreshUsing(): array
+    {
+        return [
+            '--path' => database_path('migrations/testing'),
+            '--realpath' => true,
+        ];
+    }
+
     protected function setUp(): void
     {
         $this->guardAgainstRealDatabaseTesting();
