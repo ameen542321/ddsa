@@ -149,6 +149,17 @@ class ProductStockControllerTest extends TestCase
         ]);
     }
 
+    public function test_inventory_audit_date_field_is_editable_for_owner(): void
+    {
+        [$owner, $store, $product] = $this->createOwnerStoreAndProduct();
+
+        $this->actingAs($owner)
+            ->get(route('user.stores.products.stock', [$store, $product]))
+            ->assertOk()
+            ->assertSee('name="business_date"', false)
+            ->assertDontSee('readonly', false);
+    }
+
     public function test_owner_can_cancel_the_current_inventory_audit_confirmation(): void
     {
         [$owner, $store, $product] = $this->createOwnerStoreAndProduct();

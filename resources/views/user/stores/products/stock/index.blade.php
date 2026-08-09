@@ -143,7 +143,7 @@
                     @csrf
                     <label class="mb-3 block">
                         <span class="mb-1 block ui-text-caption font-bold ui-title">تاريخ الجرد</span>
-                        <input type="date" name="business_date" value="{{ old('business_date', $currentBusinessDate) }}" required @readonly(!$isTechnicalSupport) class="ui-input">
+                        <input type="date" name="business_date" value="{{ old('business_date', $currentBusinessDate) }}" required class="ui-input">
                     </label>
                     <textarea name="audit_note" rows="2" maxlength="255" class="ui-input mb-3" placeholder="ملاحظات تأكيد الجرد (اختياري)"></textarea>
                     <button type="submit" class="w-full {{ $auditButtonClass }} font-black py-3 rounded-xl transition-all active:scale-[0.98]">
