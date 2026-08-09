@@ -2,6 +2,9 @@
 <nav class="ui-topbar"
      data-realtime-notifications
      data-notification-channel="user.{{ $auth->id }}"
+     data-security-session-monitor
+     data-security-check-url="{{ route('admin.security.maintenance.check') }}"
+     data-security-check-interval="900000"
      x-data="{ openMenu: false, openUser: false, openNotif: false }">
 
     <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">

@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,14 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Web middleware group
         $middleware->group('web', [
 
-            /* |--- ⭐ تشغيل الجدولة ---
-            | تم تعطيل الحارس القديم لأنه يسبب بطء شديد في الموقع (انتحار الأداء)
-            | \App\Http\Middleware\RunScheduler::class,
-            */
-
             // الكوكيز
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+
+            // احتواء المصادر المقيدة أمنيًا قبل تنفيذ طلبات التطبيق.
+            \App\Http\Middleware\BlockSecurityThreats::class,
 
             // تفعيل الجلسة
             \Illuminate\Session\Middleware\StartSession::class,
@@ -78,15 +75,33 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })
+        $exceptions->report(function (\Throwable $exception) {
+            if (app()->runningInConsole()) {
+                return;
+            }
 
-    ->withSchedule(function (Schedule $schedule) {
-        /* |--- ✅ المكان الصحيح لتشغيل الجدولة ---
-        | بدلاً من تشغيلها مع كل نقرة مستخدم، لارافيل سيتولى الأمر هنا بكفاءة
-        */
-        $schedule->command('model:prune')->daily();
-        // أضف مهامك هنا..
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('security_events')) {
+                    app(\App\Services\SecurityEventService::class)->record(
+                        'OPS.UNHANDLED_EXCEPTION',
+                        'operations',
+                        'high',
+                        'سيدي، رصدنا خطأً غير معالج في التطبيق.',
+                        [
+                            'confidence' => 100,
+                            'subject' => get_class($exception),
+                            'evidence' => [
+                                'exception' => get_class($exception),
+                                'file' => basename($exception->getFile()),
+                                'line' => $exception->getLine(),
+                            ],
+                        ]
+                    );
+                }
+            } catch (\Throwable) {
+                // لا يسمح لفشل الرصد بإخفاء الاستثناء الأصلي أو إنشاء حلقة تقارير.
+            }
+        });
     })
 
     ->create();

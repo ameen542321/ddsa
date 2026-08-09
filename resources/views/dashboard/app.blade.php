@@ -19,6 +19,7 @@
 </head>
 
 <body class="ui-page min-h-screen">
+<x-ui.page-loader />
 @php
     $role = auth('web')->check() ? (auth('web')->user()->role ?? 'user') : null;
     $usesAdminSidebar = $role === 'admin';

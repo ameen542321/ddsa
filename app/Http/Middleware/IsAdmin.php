@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Services\SecurityEventService;
 
 class IsAdmin
 {
@@ -19,6 +20,11 @@ class IsAdmin
 
         // [تعديل آمن] إذا لم يكن المستخدم أدمن، يتم تحويله لصفحة no-access إن كانت متاحة.
         if (! $user || $user->role !== 'admin') {
+            app(SecurityEventService::class)->record(
+                'AUTHZ.ADMIN_DENIED', 'authorization', 'medium',
+                'سيدي، رصدنا محاولة وصول غير مصرح بها إلى منطقة الإدارة.',
+                ['confidence' => 100, 'actor' => $user]
+            );
             return redirect()->route('no.access');
         }
 

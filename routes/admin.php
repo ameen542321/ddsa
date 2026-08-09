@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SupportSessionController;
 use App\Http\Controllers\Admin\SupportArchiveController;
 use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\SupportActionController;
+use App\Http\Controllers\Admin\SecurityCommandCenterController;
 
 
 
@@ -46,6 +47,14 @@ Route::middleware(['web', 'auth', 'is.admin'])
         */
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard.index');
+
+        Route::get('/security', [SecurityCommandCenterController::class, 'index'])->name('security.index');
+        Route::get('/security/{securityEvent}', [SecurityCommandCenterController::class, 'show'])->name('security.show');
+        Route::patch('/security/{securityEvent}/action', [SecurityCommandCenterController::class, 'action'])->name('security.action');
+        Route::post('/security-maintenance/check', [SecurityCommandCenterController::class, 'runCheck'])->name('security.maintenance.check');
+        Route::post('/security-maintenance/report', [SecurityCommandCenterController::class, 'runReport'])->name('security.maintenance.report');
+        Route::post('/security-maintenance/cleanup-preview', [SecurityCommandCenterController::class, 'previewCleanup'])->name('security.maintenance.cleanup-preview');
+        Route::delete('/security-maintenance/cleanup', [SecurityCommandCenterController::class, 'runCleanup'])->name('security.maintenance.cleanup');
 
         Route::get('/health/credit', [CreditHealthCheckController::class, 'index'])
             ->name('health.credit');

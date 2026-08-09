@@ -77,6 +77,7 @@ class ResetPasswordController extends Controller
                 'password' => Hash::make($request->password),
                 // إبطال جلسات «تذكرني» القديمة جزء من تأمين الحساب بعد تغيير كلمة المرور.
                 'remember_token' => null,
+                'must_reset_password' => false,
             ])->save();
 
             // حذف الرمز داخل المعاملة يجعل الرابط صالحًا لاستخدام ناجح واحد فقط.
