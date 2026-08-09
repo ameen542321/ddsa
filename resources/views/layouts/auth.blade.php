@@ -13,6 +13,7 @@
 </head>
 
 <body class="auth-page auth-page-center">
+    <x-ui.page-loader />
     <main class="w-full max-w-md">
         @yield('content')
     </main>
