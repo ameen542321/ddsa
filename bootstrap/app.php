@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,11 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Web middleware group
         $middleware->group('web', [
-
-            /* |--- ⭐ تشغيل الجدولة ---
-            | تم تعطيل الحارس القديم لأنه يسبب بطء شديد في الموقع (انتحار الأداء)
-            | \App\Http\Middleware\RunScheduler::class,
-            */
 
             // الكوكيز
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
@@ -108,14 +102,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 // لا يسمح لفشل الرصد بإخفاء الاستثناء الأصلي أو إنشاء حلقة تقارير.
             }
         });
-    })
-
-    ->withSchedule(function (Schedule $schedule) {
-        /* |--- ✅ المكان الصحيح لتشغيل الجدولة ---
-        | بدلاً من تشغيلها مع كل نقرة مستخدم، لارافيل سيتولى الأمر هنا بكفاءة
-        */
-        $schedule->command('model:prune')->daily();
-        // أضف مهامك هنا..
     })
 
     ->create();
