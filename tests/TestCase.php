@@ -9,7 +9,7 @@ abstract class TestCase extends BaseTestCase
     /**
      * تستخدم اختبارات SQLite هيكلًا نهائيًا موحدًا بدل تشغيل سجل migrations الإنتاجي الطويل.
      */
-    protected function migrateFreshUsing(): array
+    protected function migrateFreshUsing()
     {
         return [
             '--path' => database_path('migrations/testing'),
