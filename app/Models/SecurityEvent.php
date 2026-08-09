@@ -22,12 +22,15 @@ class SecurityEvent extends Model
         'acknowledged_at' => 'datetime',
         'contained_at' => 'datetime',
         'resolved_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'response_expires_at' => 'datetime',
     ];
 
     public function actor(): MorphTo { return $this->morphTo(); }
     public function target(): MorphTo { return $this->morphTo(); }
     public function assignee(): BelongsTo { return $this->belongsTo(User::class, 'assigned_to'); }
     public function acknowledger(): BelongsTo { return $this->belongsTo(User::class, 'acknowledged_by'); }
+    public function verifier(): BelongsTo { return $this->belongsTo(User::class, 'verified_by'); }
     public function activities(): HasMany { return $this->hasMany(SecurityEventActivity::class); }
 
     public function scopeOpen(Builder $query): Builder
@@ -48,5 +51,11 @@ class SecurityEvent extends Model
         return str_contains($this->source_ip, ':')
             ? implode(':', array_slice(explode(':', $this->source_ip), 0, 3)).':…'
             : 'مصدر منقح';
+    }
+
+    public function getPlaybookAttribute(): array
+    {
+        return config("security_command_center.playbooks.{$this->category}")
+            ?? config('security_command_center.playbooks.default', []);
     }
 }

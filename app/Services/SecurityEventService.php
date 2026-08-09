@@ -10,6 +10,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class SecurityEventService
 {
@@ -102,12 +103,19 @@ class SecurityEventService
         $transitions = [
             'acknowledge' => 'investigating',
             'contain' => 'contained',
-            'resolve' => 'resolved',
+            'verify_resolve' => 'resolved',
             'false_positive' => 'false_positive',
+            'release_source' => 'investigating',
+            'cancel_password_reset' => 'investigating',
+            'reopen' => 'investigating',
         ];
         $to = $transitions[$action] ?? $event->status;
 
         return DB::transaction(function () use ($event, $admin, $action, $note, $assignedTo, $to) {
+            if (in_array($action, ['contain', 'verify_resolve', 'false_positive', 'block_source', 'release_source', 'require_password_reset', 'cancel_password_reset', 'reopen'], true)) {
+                $this->rejectUnless((bool) config('security_command_center.response_enabled'), 'أوامر الاستجابة معطلة حاليًا، بينما يبقى الرصد فعالًا.');
+            }
+
             $from = $event->status;
             $changes = ['status' => $to];
 
@@ -118,14 +126,49 @@ class SecurityEventService
             } elseif ($action === 'add_note') {
                 $changes = [];
             } elseif ($action === 'contain') {
-                $changes['contained_at'] = now();
-            } elseif (in_array($action, ['resolve', 'false_positive'], true)) {
+                $this->rejectUnless(! in_array($event->status, ['resolved', 'false_positive'], true), 'لا يمكن احتواء بلاغ مغلق قبل إعادة فتحه.');
+                $changes += ['contained_at' => now(), 'response_action' => 'manual_containment'];
+            } elseif ($action === 'verify_resolve') {
+                $this->rejectUnless($event->status === 'contained', 'يجب احتواء البلاغ قبل التحقق من الحل.');
+                $changes += [
+                    'resolved_at' => now(),
+                    'verified_at' => now(),
+                    'verified_by' => $admin->id,
+                    'verification_note' => $note,
+                    'resolution' => $note,
+                ];
+            } elseif ($action === 'false_positive') {
                 $changes += ['resolved_at' => now(), 'resolution' => $note];
             } elseif ($action === 'block_source') {
-                abort_if(! $event->source_ip, 422, 'لا يوجد عنوان مصدر صالح للتقييد.');
-                abort_if(hash_equals($event->source_ip, (string) request()->ip()), 422, 'لا يمكن للمدير تقييد عنوان اتصاله الحالي.');
-                Cache::put($this->blockKey($event->source_ip), true, now()->addMinutes(30));
-                $changes += ['status' => 'contained', 'contained_at' => now()];
+                $this->rejectUnless((bool) $event->source_ip, 'لا يوجد عنوان مصدر صالح للتقييد.');
+                $this->rejectUnless(! hash_equals($event->source_ip, (string) request()->ip()), 'لا يمكن للمدير تقييد عنوان اتصاله الحالي.');
+                $expiresAt = now()->addMinutes(max(1, (int) config('security_command_center.block_minutes', 30)));
+                Cache::put($this->blockKey($event->source_ip), true, $expiresAt);
+                $changes += ['status' => 'contained', 'contained_at' => now(), 'response_action' => 'block_source', 'response_expires_at' => $expiresAt];
+            } elseif ($action === 'release_source') {
+                $this->rejectUnless($event->response_action === 'block_source' && $event->source_ip, 'لا يوجد تقييد مصدر قابل للرجوع لهذا البلاغ.');
+                Cache::forget($this->blockKey($event->source_ip));
+                $changes += ['response_action' => null, 'response_expires_at' => null];
+            } elseif ($action === 'require_password_reset') {
+                $targetUser = $event->target instanceof User ? $event->target : ($event->actor instanceof User ? $event->actor : null);
+                $this->rejectUnless((bool) $targetUser, 'لا يرتبط البلاغ بحساب مستخدم يمكن فرض إعادة التعيين عليه.');
+                $this->rejectUnless($targetUser->role !== User::ROLE_ADMIN || $targetUser->id !== $admin->id, 'لا يمكن للمدير فرض إعادة التعيين على حسابه من جلسته الحالية.');
+                $targetUser->forceFill(['must_reset_password' => true, 'remember_token' => null])->save();
+                $changes += ['status' => 'contained', 'contained_at' => now(), 'response_action' => 'require_password_reset'];
+            } elseif ($action === 'cancel_password_reset') {
+                $targetUser = $event->target instanceof User ? $event->target : ($event->actor instanceof User ? $event->actor : null);
+                $this->rejectUnless((bool) $targetUser && $targetUser->must_reset_password, 'لا يوجد فرض إعادة تعيين قابل للرجوع لهذا البلاغ.');
+                $targetUser->forceFill(['must_reset_password' => false])->save();
+                $changes += ['response_action' => null];
+            } elseif ($action === 'reopen') {
+                $this->rejectUnless(in_array($event->status, ['resolved', 'false_positive'], true), 'يمكن إعادة فتح البلاغات المغلقة فقط.');
+                $changes += [
+                    'resolved_at' => null,
+                    'verified_at' => null,
+                    'verified_by' => null,
+                    'verification_note' => null,
+                    'resolution' => null,
+                ];
             }
 
             if ($changes !== []) {
@@ -170,5 +213,12 @@ class SecurityEventService
     {
         $weights = ['info' => 0, 'low' => 1, 'medium' => 2, 'high' => 3, 'critical' => 4];
         return ($weights[$incoming] ?? 0) > ($weights[$current] ?? 0) ? $incoming : $current;
+    }
+
+    private function rejectUnless(bool $condition, string $message): void
+    {
+        if (! $condition) {
+            throw ValidationException::withMessages(['action' => $message]);
+        }
     }
 }

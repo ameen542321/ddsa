@@ -51,12 +51,17 @@ class SecurityCommandCenterTest extends TestCase
         $event = app(SecurityEventService::class)->record('TEST.ACTION', 'testing', 'medium', 'بلاغ يحتاج أمرًا');
 
         $this->actingAs($admin)->patch(route('admin.security.action', $event), [
-            'action' => 'resolve',
-            'note' => 'تم التحقق من توقف السبب وإغلاق البلاغ.',
+            'action' => 'contain',
+            'note' => 'تم احتواء السبب ويجري الآن التحقق من النتيجة.',
         ])->assertRedirect();
 
-        $this->assertDatabaseHas('security_events', ['id' => $event->id, 'status' => 'resolved', 'acknowledged_by' => null]);
-        $this->assertDatabaseHas('security_event_activities', ['security_event_id' => $event->id, 'user_id' => $admin->id, 'action' => 'resolve']);
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), [
+            'action' => 'verify_resolve',
+            'note' => 'تم التحقق من توقف السبب وعدم استمرار الأثر.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('security_events', ['id' => $event->id, 'status' => 'resolved', 'verified_by' => $admin->id]);
+        $this->assertDatabaseHas('security_event_activities', ['security_event_id' => $event->id, 'user_id' => $admin->id, 'action' => 'verify_resolve']);
     }
 
     public function test_admin_can_assign_incident_and_add_investigation_note(): void
@@ -95,5 +100,56 @@ class SecurityCommandCenterTest extends TestCase
         $this->assertSame('active', $user->refresh()->status);
         $this->assertDatabaseHas('security_events', ['event_code' => 'AUTH.LOGIN_FAILED', 'occurrences' => 5]);
         $this->assertDatabaseHas('security_events', ['event_code' => 'AUTH.RATE_LIMITED']);
+    }
+
+    public function test_resolved_incident_can_be_reopened_as_a_rollback(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->saveQuietly();
+        $event = app(SecurityEventService::class)->record('TEST.ROLLBACK', 'testing', 'high', 'بلاغ لاختبار الرجوع');
+
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), ['action' => 'contain', 'note' => 'تم احتواء البلاغ مؤقتًا.']);
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), ['action' => 'verify_resolve', 'note' => 'نجح فحص التحقق الأول.']);
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), ['action' => 'reopen', 'note' => 'عاد الأثر ووجب التراجع عن الإغلاق.'])->assertRedirect();
+
+        $event->refresh();
+        $this->assertSame('investigating', $event->status);
+        $this->assertNull($event->verified_at);
+        $this->assertDatabaseHas('security_event_activities', ['security_event_id' => $event->id, 'action' => 'reopen']);
+    }
+
+    public function test_incident_cannot_be_closed_without_containment_and_verification(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->saveQuietly();
+        $event = app(SecurityEventService::class)->record('TEST.VERIFY', 'testing', 'medium', 'بلاغ يحتاج تحققًا');
+
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), [
+            'action' => 'verify_resolve',
+            'note' => 'محاولة إغلاق دون احتواء سابق.',
+        ])->assertSessionHasErrors(['action' => 'يجب احتواء البلاغ قبل التحقق من الحل.']);
+
+        $this->assertSame('new', $event->refresh()->status);
+        $this->assertNull($event->verified_at);
+    }
+
+    public function test_password_reset_response_can_be_applied_and_rolled_back(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->saveQuietly();
+        $target = User::factory()->create();
+        $event = app(SecurityEventService::class)->record('TEST.ACCOUNT', 'authentication', 'high', 'بلاغ مرتبط بحساب', ['target' => $target]);
+
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), [
+            'action' => 'require_password_reset',
+            'note' => 'رصد دخول غير معتاد ويجب تأمين الحساب.',
+        ])->assertRedirect();
+        $this->assertTrue($target->refresh()->must_reset_password);
+
+        $this->actingAs($admin)->patch(route('admin.security.action', $event), [
+            'action' => 'cancel_password_reset',
+            'note' => 'ثبت أن البلاغ إنذار كاذب وتم التراجع.',
+        ])->assertRedirect();
+        $this->assertFalse($target->refresh()->must_reset_password);
     }
 }

@@ -33,6 +33,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'must_reset_password',
         'status',
         'role',
         'plan_id',
@@ -59,6 +60,7 @@ class User extends Authenticatable
         'subscription_end_at' => 'date',
         'expires_at'          => 'date',
         'welcome_shown'       => 'boolean',
+        'must_reset_password' => 'boolean',
         'allowed_stores'      => 'integer',
         'allowed_accountants' => 'integer',
     ];

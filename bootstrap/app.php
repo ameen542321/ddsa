@@ -116,6 +116,8 @@ return Application::configure(basePath: dirname(__DIR__))
         */
         $schedule->command('model:prune')->daily();
         $schedule->command('security:health-check')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('security:cleanup')->dailyAt('02:30')->withoutOverlapping();
+        $schedule->command('security:weekly-report')->weeklyOn(1, '08:00')->withoutOverlapping();
         // أضف مهامك هنا..
     })
 
