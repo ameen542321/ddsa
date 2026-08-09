@@ -29,6 +29,15 @@
             {{-- يمين --}}
             <div class="ui-topbar-actions">
 
+                {{-- وصول مباشر وواضح لمركز الأمن على الشاشات المتوسطة والكبيرة. --}}
+                <a href="{{ route('admin.security.index') }}"
+                   class="ui-topbar-action group relative inline-flex items-center gap-2 px-3 py-2 {{ request()->routeIs('admin.security.*') ? 'ui-sidebar-link-active' : '' }}"
+                   aria-label="فتح مركز القيادة الأمنية">
+                    <i class="fa-solid fa-shield-halved text-xl" aria-hidden="true"></i>
+                    <span class="hidden md:inline font-bold">مركز الأمن</span>
+                    <span class="ui-tooltip-popover md:hidden">مركز الأمن</span>
+                </a>
+
                 {{-- الإشعارات --}}
                 <div class="relative">
     {{-- زر الجرس --}}
@@ -137,6 +146,11 @@
         x-cloak
         class="lg:hidden ui-mobile-menu px-4 py-4 space-y-3"
     >
+        <a href="{{ route('admin.security.index') }}"
+           class="ui-mobile-action-row {{ request()->routeIs('admin.security.*') ? 'ui-sidebar-link-active' : '' }}">
+            <i class="fa-solid fa-shield-halved ui-mobile-action-icon" aria-hidden="true"></i>
+            <span>مركز القيادة الأمنية</span>
+        </a>
         <a href="{{ route('admin.users.index', ['add' => 1]) }}"
            class="ui-mobile-action-row">
             <i class="fa-solid fa-user-plus ui-mobile-action-icon"></i>

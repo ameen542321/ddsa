@@ -23,7 +23,12 @@ class SecurityCommandCenterTest extends TestCase
 
         $this->get(route('admin.security.index'))->assertRedirect(route('login'));
         $this->actingAs($owner)->get(route('admin.security.index'))->assertRedirect(route('no.access'));
-        $this->actingAs($admin)->get(route('admin.security.index'))->assertOk()->assertSee('مركز القيادة الأمنية');
+        $this->actingAs($admin)
+            ->get(route('admin.security.index'))
+            ->assertOk()
+            ->assertSee('مركز القيادة الأمنية')
+            ->assertSee('مركز الأمن')
+            ->assertSee('href="'.route('admin.security.index').'"', false);
     }
 
     public function test_service_groups_events_and_redacts_secrets(): void
