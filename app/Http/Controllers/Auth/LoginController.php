@@ -111,6 +111,14 @@ class LoginController extends Controller
 
         $user = Auth::guard($guard)->user();
 
+        if ($user?->must_reset_password) {
+            Auth::guard($guard)->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('password.request')->with('warning', 'سيدي، يلزم إعادة تعيين كلمة المرور قبل الدخول مجددًا.');
+        }
+
         if ($guard === 'web' && $user?->role === 'admin') {
             app(SecurityEventService::class)->record(
                 'AUTH.ADMIN_LOGIN', 'authentication', 'info',

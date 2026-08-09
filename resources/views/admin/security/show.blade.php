@@ -4,7 +4,7 @@
 @section('title', 'تفاصيل البلاغ الأمني')
 @php
     $statusLabels = ['new' => 'جديد', 'investigating' => 'قيد التحقيق', 'contained' => 'تم الاحتواء', 'resolved' => 'تم الحل والتحقق', 'false_positive' => 'إنذار كاذب'];
-    $actionLabels = ['acknowledge' => 'استلام البلاغ', 'assign' => 'تعيين مسؤول', 'add_note' => 'إضافة ملاحظة', 'contain' => 'اعتماد الاحتواء', 'block_source' => 'تقييد المصدر 30 دقيقة', 'resolve' => 'إغلاق بعد التحقق', 'false_positive' => 'تعليم كإنذار كاذب'];
+    $actionLabels = ['acknowledge' => 'استلام البلاغ', 'assign' => 'تعيين مسؤول', 'add_note' => 'إضافة ملاحظة', 'contain' => 'اعتماد الاحتواء', 'block_source' => 'تقييد المصدر مؤقتًا', 'verify_resolve' => 'تحقق وإغلاق', 'false_positive' => 'تعليم كإنذار كاذب', 'release_source' => 'رفع تقييد المصدر', 'require_password_reset' => 'فرض إعادة تعيين كلمة المرور', 'cancel_password_reset' => 'إلغاء فرض إعادة التعيين', 'reopen' => 'إعادة فتح البلاغ'];
 @endphp
 
 <div class="security-command-header">
@@ -47,6 +47,22 @@
         </section>
 
         <section class="ui-card p-6">
+            <h2 class="ui-title text-xl font-semibold">{{ $event->playbook['title'] ?? 'خطة الاستجابة' }}</h2>
+            <ol class="mt-4 space-y-3 list-decimal pr-5 ui-text-soft">
+                @foreach($event->playbook['steps'] ?? [] as $step)<li>{{ $step }}</li>@endforeach
+            </ol>
+            <div class="ui-alert ui-alert-info mt-5"><span class="ui-alert-body"><strong>شرط التحقق قبل الإغلاق:</strong> {{ $event->playbook['verification'] ?? 'وثق توقف السبب وعدم استمرار الأثر.' }}</span></div>
+        </section>
+
+        @if($event->verified_at)
+            <section class="ui-card p-6">
+                <h2 class="ui-title text-xl font-semibold mb-3">نتيجة التحقق</h2>
+                <p class="ui-text-soft">{{ $event->verification_note }}</p>
+                <p class="ui-text-muted mt-2">تحقق بواسطة {{ $event->verifier?->name ?: 'مدير النظام' }} في {{ $event->verified_at }}</p>
+            </section>
+        @endif
+
+        <section class="ui-card p-6">
             <h2 class="ui-title text-xl font-semibold mb-4">سجل الأوامر</h2>
             <div class="space-y-3">
                 @forelse($event->activities->sortByDesc('created_at') as $activity)
@@ -86,9 +102,17 @@
         <form method="POST" action="{{ route('admin.security.action', $event) }}" class="space-y-4">
             @csrf
             @method('PATCH')
-            <label class="block"><span class="ui-field-label">الأمر</span><select class="ui-input w-full mt-1" name="action" required><option value="acknowledge">استلام البلاغ</option><option value="contain">اعتماد الاحتواء</option><option value="block_source">تقييد المصدر 30 دقيقة</option><option value="resolve">إغلاق بعد التحقق</option><option value="false_positive">تعليم كإنذار كاذب</option></select></label>
+            <label class="block"><span class="ui-field-label">الأمر</span><select class="ui-input w-full mt-1" name="action" required>
+                @if($event->status === 'new')<option value="acknowledge">استلام البلاغ</option>@endif
+                @if(in_array($event->status, ['new', 'investigating'], true))<option value="contain">اعتماد الاحتواء</option><option value="block_source">تقييد المصدر مؤقتًا</option><option value="false_positive">تعليم كإنذار كاذب</option>@endif
+                @if(($event->target_type === \App\Models\User::class || $event->actor_type === \App\Models\User::class) && $event->response_action !== 'require_password_reset')<option value="require_password_reset">فرض إعادة تعيين كلمة المرور</option>@endif
+                @if($event->status === 'contained')<option value="verify_resolve">تحقق وإغلاق البلاغ</option>@endif
+                @if($event->response_action === 'block_source')<option value="release_source">رفع تقييد المصدر</option>@endif
+                @if($event->response_action === 'require_password_reset')<option value="cancel_password_reset">إلغاء فرض إعادة التعيين</option>@endif
+                @if(in_array($event->status, ['resolved', 'false_positive'], true))<option value="reopen">إعادة فتح البلاغ</option>@endif
+            </select></label>
             <label class="block"><span class="ui-field-label">سبب الأمر أو نتيجة التحقق</span><textarea class="ui-input w-full mt-1" name="note" rows="5" minlength="5" maxlength="1000" placeholder="اكتب سببًا واضحًا؛ مطلوب للأوامر الحساسة."></textarea></label>
-            <button class="ui-btn ui-btn-primary w-full justify-center" type="submit">تنفيذ الأمر وتوثيقه</button>
+            <button class="ui-btn ui-btn-primary w-full justify-center" type="submit" data-ui-confirm="سيتم تنفيذ أمر الاستجابة وتسجيله باسمك. تأكد من كتابة سبب ونتيجة واضحة." data-ui-confirm-title="تنفيذ أمر أمني؟">تنفيذ الأمر وتوثيقه</button>
         </form>
         </section>
     </aside>

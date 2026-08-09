@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\SecurityEventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class SecurityCommandCenterController extends Controller
@@ -43,11 +44,32 @@ class SecurityCommandCenterController extends Controller
             'operational' => SecurityEvent::open()->where('category', 'operations')->count(),
             'failed_logins_today' => SecurityEvent::where('event_code', 'AUTH.LOGIN_FAILED')->whereDate('last_seen_at', today())->sum('occurrences'),
         ];
+        $performanceEvents = SecurityEvent::query()
+            ->where('detected_at', '>=', now()->subDays(30))
+            ->get(['detected_at', 'acknowledged_at', 'contained_at', 'verified_at']);
+        $averageMinutes = function (string $timestamp) use ($performanceEvents): ?int {
+            $durations = $performanceEvents
+                ->filter(fn (SecurityEvent $event) => $event->{$timestamp})
+                ->map(fn (SecurityEvent $event) => $event->detected_at->diffInMinutes($event->{$timestamp}));
+
+            return $durations->isEmpty() ? null : (int) round($durations->average());
+        };
+        $performance = [
+            'acknowledge' => $averageMinutes('acknowledged_at'),
+            'contain' => $averageMinutes('contained_at'),
+            'verify' => $averageMinutes('verified_at'),
+        ];
 
         return view('admin.security.index', [
             'events' => $query->paginate(20)->withQueryString(),
             'summary' => $summary,
             'categories' => SecurityEvent::query()->distinct()->orderBy('category')->pluck('category'),
+            'performance' => $performance,
+            'monitoring' => [
+                'last_health_check' => Cache::get('security:health:last_run'),
+                'response_enabled' => (bool) config('security_command_center.response_enabled'),
+                'automatic_response_enabled' => (bool) config('security_command_center.automatic_response_enabled'),
+            ],
         ]);
     }
 
@@ -56,7 +78,7 @@ class SecurityCommandCenterController extends Controller
         Gate::authorize('view', $securityEvent);
 
         return view('admin.security.show', [
-            'event' => $securityEvent->load(['activities.user', 'assignee', 'acknowledger']),
+            'event' => $securityEvent->load(['activities.user', 'assignee', 'acknowledger', 'verifier']),
             'admins' => User::query()->where('role', User::ROLE_ADMIN)->orderBy('name')->get(['id', 'name']),
         ]);
     }

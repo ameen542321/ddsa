@@ -35,6 +35,23 @@
     @endforeach
 </div>
 
+<section class="ui-card p-5 mb-6" aria-labelledby="security-performance-title">
+    <h2 id="security-performance-title" class="ui-title text-xl font-semibold">زمن الاستجابة خلال 30 يومًا</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+        <div class="ui-mini-stat"><span class="ui-text-muted">متوسط الاستلام</span><strong class="block ui-title mt-1">{{ $performance['acknowledge'] === null ? 'لا بيانات' : $performance['acknowledge'].' دقيقة' }}</strong></div>
+        <div class="ui-mini-stat"><span class="ui-text-muted">متوسط الاحتواء</span><strong class="block ui-title mt-1">{{ $performance['contain'] === null ? 'لا بيانات' : $performance['contain'].' دقيقة' }}</strong></div>
+        <div class="ui-mini-stat"><span class="ui-text-muted">متوسط الحل المتحقق</span><strong class="block ui-title mt-1">{{ $performance['verify'] === null ? 'لا بيانات' : $performance['verify'].' دقيقة' }}</strong></div>
+    </div>
+</section>
+
+<div class="ui-alert ui-alert-info mb-6" role="status">
+    <div class="ui-alert-body">
+        <strong>حالة التشغيل:</strong>
+        الفحص الدوري {{ $monitoring['last_health_check'] ? 'يعمل — آخر نبضة '.$monitoring['last_health_check'] : 'لم يسجل نبضة بعد' }}.
+        الاستجابة اليدوية {{ $monitoring['response_enabled'] ? 'مفعلة' : 'معطلة' }}، والاستجابة الآلية {{ $monitoring['automatic_response_enabled'] ? 'مفعلة' : 'معطلة (وضع الرصد الآمن)' }}.
+    </div>
+</div>
+
 <form method="GET" class="ui-card security-filter-panel" aria-label="تصفية البلاغات الأمنية">
     <label><span class="ui-field-label">البحث</span><input class="ui-input w-full mt-1" type="search" name="search" value="{{ request('search') }}" placeholder="رمز البلاغ أو المصدر" autocomplete="off"></label>
     <label><span class="ui-field-label">الخطورة</span><select class="ui-input w-full mt-1" name="severity">
