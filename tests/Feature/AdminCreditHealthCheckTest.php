@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\CreditHealthCheckController;
+use App\Models\CreditCollection;
 use App\Models\CreditSale;
 use App\Models\Employee;
 use App\Models\Store;
@@ -69,6 +70,7 @@ class AdminCreditHealthCheckTest extends TestCase
             'collection_date' => '2026-07-18',
             'collected_by' => null,
         ]);
+        $this->assertInstanceOf(CreditCollection::class, $mismatchCredit->collections()->first());
 
         CreditSale::create([
             'store_id' => $store->id,
