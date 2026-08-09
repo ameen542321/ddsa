@@ -10,6 +10,9 @@ use App\Services\SecurityEventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class SecurityCommandCenterController extends Controller
@@ -97,5 +100,46 @@ class SecurityCommandCenterController extends Controller
         );
 
         return back()->with('success', 'تم تنفيذ الأمر وتوثيقه في سجل الحادث.');
+    }
+
+    public function runCheck(Request $request): JsonResponse|RedirectResponse
+    {
+        Gate::authorize('viewAny', SecurityEvent::class);
+        $automatic = $request->boolean('automatic');
+        $lockSeconds = $automatic ? 900 : 60;
+
+        if (! Cache::add('security:maintenance:health-lock', true, now()->addSeconds($lockSeconds))) {
+            $message = 'سيدي، نُفذ الفحص مؤخرًا؛ لم نكرر التشغيل لحماية موارد الاستضافة.';
+            return $request->expectsJson() ? response()->json(['status' => 'skipped', 'message' => $message]) : back()->with('info', $message);
+        }
+
+        Artisan::call('security:health-check');
+        $message = 'سيدي، اكتمل الفحص الأمني والتشغيلي بنجاح.';
+
+        return $request->expectsJson() ? response()->json(['status' => 'completed', 'message' => $message]) : back()->with('success', $message);
+    }
+
+    public function runReport(): RedirectResponse
+    {
+        Gate::authorize('viewAny', SecurityEvent::class);
+        Artisan::call('security:weekly-report');
+
+        return back()->with('success', 'سيدي، أُنشئ تقرير الموقف وأُرسل إلى إشعارات الإدارة.');
+    }
+
+    public function previewCleanup(): RedirectResponse
+    {
+        Gate::authorize('viewAny', SecurityEvent::class);
+        Artisan::call('security:cleanup', ['--dry-run' => true]);
+
+        return back()->with('info', trim(Artisan::output()));
+    }
+
+    public function runCleanup(): RedirectResponse
+    {
+        Gate::authorize('viewAny', SecurityEvent::class);
+        Artisan::call('security:cleanup');
+
+        return back()->with('success', trim(Artisan::output()));
     }
 }

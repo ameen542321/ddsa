@@ -47,10 +47,26 @@
 <div class="ui-alert ui-alert-info mb-6" role="status">
     <div class="ui-alert-body">
         <strong>حالة التشغيل:</strong>
-        الفحص الدوري {{ $monitoring['last_health_check'] ? 'يعمل — آخر نبضة '.$monitoring['last_health_check'] : 'لم يسجل نبضة بعد' }}.
+        فحص جلسة الأدمن {{ $monitoring['last_health_check'] ? 'يعمل — آخر نبضة '.$monitoring['last_health_check'] : 'لم يسجل نبضة بعد' }}.
         الاستجابة اليدوية {{ $monitoring['response_enabled'] ? 'مفعلة' : 'معطلة' }}، والاستجابة الآلية {{ $monitoring['automatic_response_enabled'] ? 'مفعلة' : 'معطلة (وضع الرصد الآمن)' }}.
     </div>
 </div>
+
+<section class="ui-card p-5 mb-6" aria-labelledby="security-maintenance-title">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <h2 id="security-maintenance-title" class="ui-title text-xl font-semibold">التشغيل اليدوي الاقتصادي</h2>
+            <p class="ui-text-soft mt-1">لا يعتمد مركز الأمن على Cron. أثناء نشاط جلسة الأدمن ينفذ فحصًا واحدًا كل 15 دقيقة، ويمكنك تشغيل المهام التالية يدويًا.</p>
+        </div>
+        <span class="ui-badge ui-badge-info">مناسب للاستضافة المشتركة</span>
+    </div>
+    <div class="flex flex-wrap gap-3 mt-5">
+        <form method="POST" action="{{ route('admin.security.maintenance.check') }}">@csrf<button class="ui-btn ui-btn-primary" type="submit"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i>فحص أمني الآن</button></form>
+        <form method="POST" action="{{ route('admin.security.maintenance.report') }}">@csrf<button class="ui-btn ui-btn-secondary" type="submit"><i class="fa-solid fa-file-lines" aria-hidden="true"></i>إنشاء تقرير الآن</button></form>
+        <form method="POST" action="{{ route('admin.security.maintenance.cleanup-preview') }}">@csrf<button class="ui-btn ui-btn-secondary" type="submit"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>معاينة التنظيف</button></form>
+        <form method="POST" action="{{ route('admin.security.maintenance.cleanup') }}" data-ui-confirm="سيتم حذف البلاغات المغلقة التي تجاوزت مدة الاحتفاظ فقط. استخدم المعاينة أولًا." data-ui-confirm-title="تنفيذ تنظيف السجلات؟">@csrf @method('DELETE')<button class="ui-btn ui-btn-danger" type="submit"><i class="fa-solid fa-broom" aria-hidden="true"></i>تنفيذ التنظيف</button></form>
+    </div>
+</section>
 
 <form method="GET" class="ui-card security-filter-panel" aria-label="تصفية البلاغات الأمنية">
     <label><span class="ui-field-label">البحث</span><input class="ui-input w-full mt-1" type="search" name="search" value="{{ request('search') }}" placeholder="رمز البلاغ أو المصدر" autocomplete="off"></label>
