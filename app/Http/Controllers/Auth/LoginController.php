@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\RateLimiter; // لإدارة محاولات ال�
 use App\Models\User; // أو موديول المحاسب حسب الحاجة
 use Illuminate\Support\Str;
 use App\Services\SupportSessionService;
+use App\Services\SecurityEventService;
 
 class LoginController extends Controller
 {
@@ -20,8 +21,8 @@ class LoginController extends Controller
 
         $remember = $request->boolean('remember');
 
-        // ⭐ المفتاح الآن يعتمد على الإيميل فقط لضمان سهولة المسح
-        $throttleKey = Str::lower($request->input('email'));
+        // مفتاح مركب يمنع التحايل على الحد، دون تمكين مهاجم من إيقاف حساب الضحية.
+        $throttleKey = hash('sha256', Str::lower($request->input('email')).'|'.$request->ip());
 
         // فحص الحالة قبل كل شيء
         $user = \App\Models\User::where('email', $request->email)->first()
@@ -31,16 +32,15 @@ class LoginController extends Controller
             return back()->withErrors(['email' => 'حسابك موقوف، راجع مالك المتجر.']);
         }
 
-        // إذا كان نشطاً، نتأكد من تصفير أي قيود قديمة عالقة في الكاش
-        if ($user && $user->status === 'active') {
-            RateLimiter::clear($throttleKey);
-        }
-
         // فحص عدد المحاولات
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $this->suspendUserAccount($request->input('email'));
+            app(SecurityEventService::class)->record(
+                'AUTH.RATE_LIMITED', 'authentication', 'high',
+                'سيدي، قبضنا على محاولة دخول متكررة وتم تقييد المصدر مؤقتًا.',
+                ['confidence' => 90, 'subject' => Str::lower($request->input('email')), 'evidence' => ['email_hash' => hash('sha256', Str::lower($request->input('email'))), 'attempts' => RateLimiter::attempts($throttleKey)]]
+            );
             return back()->withErrors([
-                'email' => 'لقد تم إيقاف حسابك لتكرار المحاولات الخاطئة. يرجى مراجعة المالك.'
+                'email' => 'تم تجاوز عدد المحاولات المسموح. حاول مرة أخرى لاحقًا.'
             ]);
         }
 
@@ -57,27 +57,15 @@ class LoginController extends Controller
 
         // تسجيل فشل المحاولة
         RateLimiter::hit($throttleKey, 3600);
+        app(SecurityEventService::class)->record(
+            'AUTH.LOGIN_FAILED', 'authentication', RateLimiter::attempts($throttleKey) >= 3 ? 'medium' : 'low',
+            'سيدي، رصدنا محاولة دخول غير ناجحة.',
+            ['confidence' => 100, 'subject' => Str::lower($request->input('email')), 'evidence' => ['email_hash' => hash('sha256', Str::lower($request->input('email'))), 'attempts' => RateLimiter::attempts($throttleKey)]]
+        );
 
         return back()->withErrors(['email' => 'بيانات الدخول غير صحيحة'])->onlyInput('email');
     }
 
-    /**
-     * دالة مخصصة لإيقاف الحساب في قاعدة البيانات
-     */
-    protected function suspendUserAccount($email)
-    {
-        // نبحث في جدول المستخدمين
-        $user = \App\Models\User::where('email', $email)->first();
-        if ($user) {
-            $user->update(['status' => 'suspended']); // افترضنا أن العمود اسمه status
-        }
-
-        // نبحث أيضاً في جدول المحاسبين إذا كان النظام منفصلاً
-        $accountant = \App\Models\Accountant::where('email', $email)->first();
-        if ($accountant) {
-            $accountant->update(['status' => 'suspended']);
-        }
-    }
     public function showLoginForm()
     {
         return view('auth.login');
@@ -122,6 +110,14 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::guard($guard)->user();
+
+        if ($guard === 'web' && $user?->role === 'admin') {
+            app(SecurityEventService::class)->record(
+                'AUTH.ADMIN_LOGIN', 'authentication', 'info',
+                'سيدي، تم تسجيل دخول إداري بنجاح.',
+                ['confidence' => 100, 'actor' => $user, 'subject' => (string) $user->id]
+            );
+        }
 
         // التوجيه الذكي بناءً على الرتبة والحارس
         if ($guard === 'accountant') {

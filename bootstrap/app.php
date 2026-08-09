@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
 
+            // احتواء المصادر المقيدة أمنيًا قبل تنفيذ طلبات التطبيق.
+            \App\Http\Middleware\BlockSecurityThreats::class,
+
             // تفعيل الجلسة
             \Illuminate\Session\Middleware\StartSession::class,
 
@@ -78,7 +81,33 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->report(function (\Throwable $exception) {
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('security_events')) {
+                    app(\App\Services\SecurityEventService::class)->record(
+                        'OPS.UNHANDLED_EXCEPTION',
+                        'operations',
+                        'high',
+                        'سيدي، رصدنا خطأً غير معالج في التطبيق.',
+                        [
+                            'confidence' => 100,
+                            'subject' => get_class($exception),
+                            'evidence' => [
+                                'exception' => get_class($exception),
+                                'file' => basename($exception->getFile()),
+                                'line' => $exception->getLine(),
+                            ],
+                        ]
+                    );
+                }
+            } catch (\Throwable) {
+                // لا يسمح لفشل الرصد بإخفاء الاستثناء الأصلي أو إنشاء حلقة تقارير.
+            }
+        });
     })
 
     ->withSchedule(function (Schedule $schedule) {
@@ -86,6 +115,7 @@ return Application::configure(basePath: dirname(__DIR__))
         | بدلاً من تشغيلها مع كل نقرة مستخدم، لارافيل سيتولى الأمر هنا بكفاءة
         */
         $schedule->command('model:prune')->daily();
+        $schedule->command('security:health-check')->everyFiveMinutes()->withoutOverlapping();
         // أضف مهامك هنا..
     })
 

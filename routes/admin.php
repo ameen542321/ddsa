@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SupportSessionController;
 use App\Http\Controllers\Admin\SupportArchiveController;
 use App\Http\Controllers\Admin\SupportTicketController;
 use App\Http\Controllers\Admin\SupportActionController;
+use App\Http\Controllers\Admin\SecurityCommandCenterController;
 
 
 
@@ -46,6 +47,10 @@ Route::middleware(['web', 'auth', 'is.admin'])
         */
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard.index');
+
+        Route::get('/security', [SecurityCommandCenterController::class, 'index'])->name('security.index');
+        Route::get('/security/{securityEvent}', [SecurityCommandCenterController::class, 'show'])->name('security.show');
+        Route::patch('/security/{securityEvent}/action', [SecurityCommandCenterController::class, 'action'])->name('security.action');
 
         Route::get('/health/credit', [CreditHealthCheckController::class, 'index'])
             ->name('health.credit');
