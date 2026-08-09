@@ -18,7 +18,7 @@ const showFlashMessages = () => {
             icon: flashMessage.icon,
             title: flashMessage.title,
             showConfirmButton: false,
-            timer: 4500,
+            timer: 3000,
             timerProgressBar: true,
         });
     });
