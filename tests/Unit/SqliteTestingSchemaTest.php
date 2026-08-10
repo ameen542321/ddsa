@@ -31,6 +31,7 @@ class SqliteTestingSchemaTest extends TestCase
         $productColumns = $database->query('PRAGMA table_info("products")')->fetchAll(PDO::FETCH_ASSOC);
         $creditSaleColumns = $database->query('PRAGMA table_info("credit_sales")')->fetchAll(PDO::FETCH_ASSOC);
         $saleColumns = $database->query('PRAGMA table_info("sales")')->fetchAll(PDO::FETCH_ASSOC);
+        $accountantColumns = $database->query('PRAGMA table_info("accountants")')->fetchAll(PDO::FETCH_ASSOC);
 
         $this->assertContains('must_reset_password', array_column($userColumns, 'name'));
         $this->assertContains('verification_note', array_column($securityColumns, 'name'));
@@ -45,6 +46,13 @@ class SqliteTestingSchemaTest extends TestCase
         ));
         $this->assertIsArray($saleAccountantColumn);
         $this->assertSame(1, (int) $saleAccountantColumn['notnull']);
+
+        $accountantEmployeeColumn = current(array_filter(
+            $accountantColumns,
+            static fn (array $column): bool => $column['name'] === 'employee_id'
+        ));
+        $this->assertIsArray($accountantEmployeeColumn);
+        $this->assertSame(1, (int) $accountantEmployeeColumn['notnull']);
         $this->assertSame(0, (int) $database->query('SELECT COUNT(*) FROM users')->fetchColumn());
     }
 }

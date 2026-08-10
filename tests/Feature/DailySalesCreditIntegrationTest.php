@@ -30,6 +30,7 @@ class DailySalesCreditIntegrationTest extends TestCase
         $accountant = Accountant::create([
             'user_id' => $owner->id,
             'store_id' => $store->id,
+            'employee_id' => $employee->id,
             'name' => 'Daily sales test accountant',
             'email' => 'daily-credit-accountant@example.com',
             'phone' => '0500000013',
