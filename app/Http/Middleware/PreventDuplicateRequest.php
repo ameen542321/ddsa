@@ -28,6 +28,12 @@ class PreventDuplicateRequest
 
     private function shouldProtect(Request $request): bool
     {
+        // يملك فحص مركز الأمن قفلًا أطول خاصًا به ويعيد status=skipped بنجاح عند التكرار.
+        // تركه هنا يحوّل الطلب الثاني إلى 409 قبل وصوله إلى عقد الفحص الآمن في الـController.
+        if ($request->routeIs('admin.security.maintenance.check')) {
+            return false;
+        }
+
         if (!$request->isMethodSafe() && !in_array($request->method(), ['OPTIONS'], true)) {
             return true;
         }

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\Accounting\ProfitRecognitionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
@@ -64,19 +64,20 @@ class CreditReportTest extends TestCase
     {
         $stats = app(ProfitRecognitionService::class)->fromSales(new Collection([
             (object) [
+                // إجمالي 70 = تكلفة 40 + ربح 30؛ حُصّل 40 وبقي 30 ربحًا مؤجلًا.
                 'products_total' => 70,
                 'labor_total' => 0,
                 'profit' => 30,
-                'final_total' => 100,
+                'final_total' => 70,
                 'paid_amount' => 40,
                 'cash_amount' => 40,
                 'card_amount' => 0,
-                'remaining_amount' => 60,
+                'remaining_amount' => 30,
             ],
         ]));
 
         $this->assertSame(40.0, (float) $stats['recognized_cost']);
-        $this->assertSame(30.0, (float) $stats['uncovered_cost']);
+        $this->assertSame(0.0, (float) $stats['uncovered_cost']);
         $this->assertSame(0.0, (float) $stats['recognized_profit']);
         $this->assertSame(30.0, (float) $stats['deferred_profit']);
     }

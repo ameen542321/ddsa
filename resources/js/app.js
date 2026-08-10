@@ -35,6 +35,7 @@ import './features/accountant/debt-operations';
 import './features/stores/daily-sales';
 import './features/stores/store-sales-chart';
 import './features/admin-notification-recipients';
+import './features/security-session-monitor';
 import './features/store-products/product-form-shared';
 import './features/store-products/product-create-interface';
 import './features/store-products/product-edit-interface';

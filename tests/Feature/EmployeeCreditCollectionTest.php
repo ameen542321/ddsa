@@ -9,7 +9,7 @@ use App\Models\EmployeeLog;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\ShiftLifecycleService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class EmployeeCreditCollectionTest extends TestCase

@@ -11,7 +11,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Models\Withdrawal;
 use App\Http\Controllers\Employees\EmployeeService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 

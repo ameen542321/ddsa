@@ -7,7 +7,7 @@ use App\Models\Accountant;
 use App\Models\ArchivedItem;
 use App\Models\SupportSession;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class SupportTicketFlowTest extends TestCase

@@ -8,7 +8,7 @@ use App\Models\Employee;
 use App\Models\Plan;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class AdministrativeArchiveExpansionTest extends TestCase

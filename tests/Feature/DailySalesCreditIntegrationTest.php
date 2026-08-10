@@ -2,12 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Accountant;
 use App\Models\CreditSale;
 use App\Models\Employee;
 use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class DailySalesCreditIntegrationTest extends TestCase
@@ -26,10 +27,21 @@ class DailySalesCreditIntegrationTest extends TestCase
             'salary' => 1000,
             'status' => 'active',
         ]);
+        $accountant = Accountant::create([
+            'user_id' => $owner->id,
+            'store_id' => $store->id,
+            'employee_id' => $employee->id,
+            'name' => 'Daily sales test accountant',
+            'email' => 'daily-credit-accountant@example.com',
+            'phone' => '0500000013',
+            'password' => 'password',
+            'status' => 'active',
+        ]);
 
         $sale = Sale::create([
             'store_id' => $store->id,
             'employee_id' => $employee->id,
+            'accountant_id' => $accountant->id,
             'sale_type' => 'credit',
             'products_total' => 80,
             'tax_rate' => 0,
@@ -59,6 +71,7 @@ class DailySalesCreditIntegrationTest extends TestCase
             'date' => '2026-07-18',
             'status' => CreditSale::STATUS_PENDING,
             'month' => '2026-07',
+            'added_by' => $owner->id,
         ]);
 
         $this->assertSame($sale->id, $creditSale->resolveLinkedSaleId());

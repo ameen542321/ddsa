@@ -3,13 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Accountant;
+use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class InternalUseControllerTest extends TestCase
@@ -80,10 +81,19 @@ class InternalUseControllerTest extends TestCase
             'status' => 'active',
         ]);
 
+        $employee = Employee::create([
+            'store_id' => $store->id,
+            'user_id' => $owner->id,
+            'name' => 'Internal use employee',
+            'phone' => '0500000022',
+            'salary' => 1000,
+            'status' => 'active',
+        ]);
+
         $accountant = Accountant::create([
             'user_id' => $owner->id,
             'store_id' => $store->id,
-            'employee_id' => null,
+            'employee_id' => $employee->id,
             'name' => 'Internal Use Accountant',
             'email' => 'internal-use@example.com',
             'phone' => '0500000001',
@@ -130,7 +140,9 @@ class InternalUseControllerTest extends TestCase
         $saleItem = SaleItem::query()->firstOrFail();
 
         $this->assertSame('internal_use', $sale->sale_type);
-        $this->assertSame(60.0, (float) $sale->total);
+        $this->assertSame(35.0, (float) $sale->total);
+        $this->assertSame(17.5, (float) $saleItem->price);
+        $this->assertSame(35.0, (float) $saleItem->total);
         $this->assertSame(2.0, (float) $saleItem->quantity);
         $this->assertSame('piece', $saleItem->unit_type);
 

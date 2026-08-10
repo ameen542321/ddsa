@@ -7,7 +7,7 @@ use App\Models\Store;
 use App\Models\StoreTransfer;
 use App\Models\User;
 use App\Services\StoreTransferService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class StoreTransferAccountingDateTest extends TestCase

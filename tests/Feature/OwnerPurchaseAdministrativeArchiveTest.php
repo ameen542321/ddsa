@@ -8,7 +8,7 @@ use App\Models\Purchase;
 use App\Models\User;
 use App\Models\SupportSession;
 use App\Services\SupportSessionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class OwnerPurchaseAdministrativeArchiveTest extends TestCase
@@ -63,6 +63,7 @@ class OwnerPurchaseAdministrativeArchiveTest extends TestCase
 
     public function test_technical_support_can_permanently_delete_archived_owner_purchase_from_trash(): void
     {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $owner = User::factory()->create(['role' => User::ROLE_USER]);
         $store = $owner->stores()->firstOrFail();
         $purchase = Purchase::create([
@@ -81,7 +82,7 @@ class OwnerPurchaseAdministrativeArchiveTest extends TestCase
             $purchase->purchase_name
         );
         $session = new SupportSession([
-            'admin_id' => 9001,
+            'admin_id' => $admin->id,
             'target_type' => User::class,
             'target_id' => $owner->id,
             'target_role' => 'owner',

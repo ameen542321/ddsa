@@ -1,6 +1,8 @@
 const flashMessagesRoot = document.querySelector('[data-ui-flash-messages]');
 
-if (flashMessagesRoot && window.Swal?.fire) {
+const showFlashMessages = () => {
+    if (!flashMessagesRoot || !window.Swal?.fire) return;
+
     const flashMessages = [
         { icon: 'success', title: flashMessagesRoot.dataset.successMessage },
         { icon: 'error', title: flashMessagesRoot.dataset.errorMessage },
@@ -20,4 +22,10 @@ if (flashMessagesRoot && window.Swal?.fire) {
             timerProgressBar: true,
         });
     });
+};
+
+if (document.documentElement.classList.contains('ui-font-loading')) {
+    document.addEventListener('ui:page-ready', showFlashMessages, { once: true });
+} else {
+    showFlashMessages();
 }

@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Accountant;
+use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class DailySalesProfitDisplayTest extends TestCase
@@ -19,11 +21,30 @@ class DailySalesProfitDisplayTest extends TestCase
         $owner = User::factory()->create([
             'role' => 'user',
             'status' => 'active',
+            'welcome_shown' => true,
             'subscription_end_at' => now()->addDays(30),
         ]);
 
         $store = Store::factory()->create([
             'user_id' => $owner->id,
+            'status' => 'active',
+        ]);
+        $employee = Employee::create([
+            'store_id' => $store->id,
+            'user_id' => $owner->id,
+            'name' => 'Daily sales test employee',
+            'phone' => '0500000015',
+            'salary' => 1000,
+            'status' => 'active',
+        ]);
+        $accountant = Accountant::create([
+            'user_id' => $owner->id,
+            'store_id' => $store->id,
+            'employee_id' => $employee->id,
+            'name' => 'Daily sales test accountant',
+            'email' => 'daily-profit-accountant@example.com',
+            'phone' => '0500000014',
+            'password' => 'password',
             'status' => 'active',
         ]);
 
@@ -48,7 +69,7 @@ class DailySalesProfitDisplayTest extends TestCase
         $sale = Sale::create([
             'store_id' => $store->id,
             'employee_id' => null,
-            'accountant_id' => null,
+            'accountant_id' => $accountant->id,
             'sale_type' => 'cash',
             'products_total' => 20,
             'tax_rate' => 0,

@@ -8,6 +8,9 @@
 @php
     $shiftRequests = collect($shiftRequests);
     $transferCount = (int) $incomingTransfers + (int) $outgoingTransfers;
+    $activeReferenceDayName = $activeReferenceDate
+        ? \Carbon\Carbon::parse($activeReferenceDate)->locale('ar')->translatedFormat('l')
+        : null;
 @endphp
 
 <div x-data="{ dashboardAlertOpen: null }" class="inline-flex flex-wrap items-center gap-2">
@@ -51,8 +54,8 @@
                 </div>
 
                 <div x-show="dashboardAlertOpen === 'reference-day'" class="ui-alert ui-alert-warning">
-                    <span class="flex items-center gap-2"><strong class="ui-alert-title">يوم مرجع مفعل</strong><x-ui.help title="اليوم المرجع" body="عند تفعيل يوم مرجع تعرض بطاقات الصفحة عمليات ذلك التاريخ بدل عمليات اليوم الحالي حتى تنتهي من معالجته." /></span>
-                    <span class="ui-alert-body">تعرض الصفحة الآن عمليات تاريخ {{ $activeReferenceDate }} حتى إغلاق اليوم المرجع أو تأجيله.</span>
+                    <span class="flex items-center gap-2"><strong class="ui-alert-title">يوم مرجع مفعل — {{ $activeReferenceDayName }}</strong><x-ui.help title="اليوم المرجع" body="عند تفعيل يوم مرجع تعرض بطاقات الصفحة عمليات ذلك التاريخ بدل عمليات اليوم الحالي حتى تنتهي من معالجته." /></span>
+                    <span class="ui-alert-body">تعرض الصفحة الآن عمليات يوم {{ $activeReferenceDayName }}، تاريخ {{ $activeReferenceDate }}، حتى إغلاق اليوم المرجع أو تأجيله.</span>
                 </div>
 
                 <div x-show="dashboardAlertOpen === 'owner-requests'" class="space-y-3">

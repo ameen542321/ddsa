@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrder;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrderItem;
 use App\Services\SupportSessionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class PurchaseOrderTechnicalSupportTest extends TestCase

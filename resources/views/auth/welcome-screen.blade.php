@@ -10,6 +10,7 @@
 </head>
 
 <body class="auth-page auth-page-center">
+    <x-ui.page-loader />
     <div class="auth-shell auth-shell-wide" data-welcome-progress>
         <h1 class="break-words text-2xl font-black ui-title sm:text-3xl">مرحباً {{ auth()->user()->name }} 👋</h1>
         <p class="mt-3 text-sm ui-text-soft">يتم تجهيز حسابك الآن…</p>

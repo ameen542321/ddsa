@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\InventoryLog;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductStockControllerTest extends TestCase
@@ -121,8 +123,10 @@ class ProductStockControllerTest extends TestCase
             'roll_length_at_movement' => null,
             'meters' => null,
             'note' => 'Restock shipment',
-            'business_date' => '2026-08-01',
         ]);
+
+        $movement = $product->stockMovements()->where('note', 'Restock shipment')->firstOrFail();
+        $this->assertSame('2026-08-01', $movement->business_date->toDateString());
     }
 
     public function test_owner_can_confirm_inventory_audit_on_selected_date(): void
@@ -140,13 +144,34 @@ class ProductStockControllerTest extends TestCase
             'store_id' => $store->id,
             'product_id' => $product->id,
             'type' => Product::INVENTORY_AUDIT_CONFIRMED_TYPE,
-            'business_date' => '2026-07-31',
         ]);
         $this->assertDatabaseHas('stock_movements', [
             'store_id' => $store->id,
             'product_id' => $product->id,
-            'business_date' => '2026-07-31',
         ]);
+
+        $inventoryLog = InventoryLog::query()
+            ->where('product_id', $product->id)
+            ->where('type', Product::INVENTORY_AUDIT_CONFIRMED_TYPE)
+            ->firstOrFail();
+        $stockMovement = StockMovement::query()
+            ->where('product_id', $product->id)
+            ->where('note', 'like', 'تأكيد جرد المنتج%')
+            ->firstOrFail();
+
+        $this->assertSame('2026-07-31', $inventoryLog->business_date->toDateString());
+        $this->assertSame('2026-07-31', $stockMovement->business_date->toDateString());
+    }
+
+    public function test_inventory_audit_date_field_is_editable_for_owner(): void
+    {
+        [$owner, $store, $product] = $this->createOwnerStoreAndProduct();
+
+        $this->actingAs($owner)
+            ->get(route('user.stores.products.stock', [$store, $product]))
+            ->assertOk()
+            ->assertSee('name="business_date"', false)
+            ->assertDontSee('readonly', false);
     }
 
     public function test_owner_can_cancel_the_current_inventory_audit_confirmation(): void

@@ -73,7 +73,7 @@ class ProductStockController extends Controller
         ]);
         $isTechnicalSupport = app(SupportSessionService::class)->active($request) !== null;
         $currentBusinessDate = app(ShiftLifecycleService::class)->currentShiftContext($store->id)['business_date'];
-        $businessDate = $isTechnicalSupport ? ($validated['business_date'] ?? $currentBusinessDate) : $currentBusinessDate;
+        $businessDate = $validated['business_date'] ?? $currentBusinessDate;
         $monthStart = \Carbon\Carbon::parse($businessDate)->startOfMonth();
         if (! $isTechnicalSupport && $product->inventoryLogs()
             ->where('type', Product::INVENTORY_AUDIT_CONFIRMED_TYPE)

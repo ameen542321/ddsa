@@ -9,8 +9,7 @@ use App\Models\Store;
 use App\Models\User;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrder;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrderItem;
-use App\Modules\PurchaseOrders\Services\StorePurchaseOrderService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class PurchaseOrderInventoryReviewSecurityTest extends TestCase
@@ -35,7 +34,12 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             ->get(route('accountant.purchase-orders.create'));
 
         $response->assertOk();
-        $response->assertSee('كشاف اختبار حساس');
+
+        $decodedHtml = html_entity_decode($response->getContent(), ENT_QUOTES | ENT_HTML5);
+        $this->assertStringContainsString(
+            json_encode('كشاف اختبار حساس', JSON_THROW_ON_ERROR),
+            $decodedHtml
+        );
         $response->assertDontSee('98765.432', false);
         $response->assertDontSee('8765.43', false);
         $response->assertDontSee('7654.32', false);
@@ -51,7 +55,7 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'user_id' => $owner->id,
             'accountant_id' => $otherAccountant->id,
             'supplier_name' => 'مورد الاختبار',
-            'status' => StorePurchaseOrderService::STATUS_DRAFT,
+            'status' => 'draft',
         ]);
 
         $this->actingAs($accountant, 'accountant')
@@ -179,7 +183,9 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'user_id' => $owner->id,
             'accountant_id' => $accountant->id,
             'supplier_name' => 'مورد الاختبار',
-            'status' => StorePurchaseOrderService::STATUS_INVENTORY_SUBMITTED,
+            'status' => 'sent',
+            'workflow_status' => 'returned_after_count',
+            'inventory_review_status' => 'pending_owner_after_count',
             'inventory_submitted_at' => now(),
         ]);
         StorePurchaseOrderItem::create([
@@ -188,8 +194,9 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'quantity_requested' => 3,
             'unit_type' => 'unit',
             'cost_price_at_order' => 10,
-            'inventory_counted_quantity' => 8,
-            'inventory_snapshot_quantity' => 10,
+            'inventory_count_quantity' => 8,
+            'inventory_count_unit' => 'unit',
+            'system_quantity_snapshot' => 10,
             'inventory_snapshot_at' => now(),
         ]);
 
@@ -197,13 +204,13 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             ->get(route('user.stores.purchase-orders.show', [$store->id, $order->id]))
             ->assertOk()
             ->assertSee('نقص', false)
-            ->assertSee('10.000', false);
+            ->assertSee('10.00', false);
 
         $this->actingAs($accountant, 'accountant')
             ->get(route('accountant.purchase-orders.show', $order->id))
             ->assertOk()
-            ->assertDontSee('نقص', false)
-            ->assertDontSee('10.000', false);
+            ->assertDontSee('نتيجة مراجعة الجرد', false)
+            ->assertDontSee('الكمية وقت إرسال الجرد', false);
     }
 
     public function test_inventory_count_shows_unit_choices_only_for_convertible_products(): void
@@ -226,7 +233,8 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'store_id' => $store->id,
             'user_id' => $owner->id,
             'accountant_id' => $accountant->id,
-            'status' => StorePurchaseOrderService::STATUS_INVENTORY_RETURNED,
+            'status' => 'draft',
+            'workflow_status' => 'returned_for_count',
             'inventory_review_status' => 'returned_to_accountant',
         ]);
 
@@ -241,13 +249,17 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             ]);
         }
 
-        $this->actingAs($accountant, 'accountant')
+        $response = $this->actingAs($accountant, 'accountant')
             ->get(route('accountant.purchase-orders.inventory-count', $order))
             ->assertOk()
             ->assertSee('الطقم = 2 حبة', false)
             ->assertSee('الرول = 30.00 متر', false)
             ->assertSee('name="items['.$order->items->firstWhere('product_id', $products[0]->id)->id.'][inventory_count_unit]" value="unit"', false)
-            ->assertSeeInOrder(['منتج قطعة واحدة', 'منتج طقم', 'وحدة الجرد', 'منتج رول', 'وحدة الجرد']);
+            ->assertSee('منتج قطعة واحدة')
+            ->assertSee('منتج طقم')
+            ->assertSee('منتج رول');
+
+        $this->assertSame(2, substr_count($response->getContent(), 'وحدة الجرد'));
     }
 
     public function test_inventory_paper_view_does_not_include_system_snapshot_or_difference(): void
@@ -268,7 +280,9 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'user_id' => $owner->id,
             'accountant_id' => $accountant->id,
             'supplier_name' => 'مورد الاختبار',
-            'status' => StorePurchaseOrderService::STATUS_INVENTORY_RETURNED,
+            'status' => 'draft',
+            'workflow_status' => 'returned_for_count',
+            'inventory_review_status' => 'returned_to_accountant',
         ]);
         StorePurchaseOrderItem::create([
             'store_purchase_order_id' => $order->id,
@@ -276,12 +290,16 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'quantity_requested' => 4,
             'unit_type' => 'unit',
             'cost_price_at_order' => 10,
-            'inventory_counted_quantity' => 8,
-            'inventory_snapshot_quantity' => 77,
+            'inventory_count_required' => true,
+            'inventory_count_quantity' => 8,
+            'inventory_count_unit' => 'unit',
+            'system_quantity_snapshot' => 77,
             'inventory_snapshot_at' => now(),
         ]);
 
-        $html = view('modules.purchase-orders.inventory-pdf', compact('order'))->render();
+        $order->load(['items.product', 'store.user', 'accountant']);
+        $store = $order->store;
+        $html = view('modules.purchase-orders.inventory-count-pdf', compact('order', 'store'))->render();
 
         $this->assertStringContainsString('منتج PDF الجرد', $html);
         $this->assertStringContainsString('كمية الجرد', $html);

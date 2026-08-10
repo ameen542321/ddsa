@@ -6,7 +6,7 @@ use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class UserDashboardCollectionProfitTest extends TestCase

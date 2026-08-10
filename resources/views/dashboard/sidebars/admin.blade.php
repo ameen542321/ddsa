@@ -38,6 +38,16 @@
             </a>
         </li>
 
+        <li>
+            <a href="{{ route('admin.security.index') }}"
+                class="ui-sidebar-link group relative {{ request()->routeIs('admin.security.*') ? 'ui-sidebar-link-active' : 'ui-sidebar-link-rest' }}"
+                aria-label="مركز القيادة الأمنية">
+                <i class="fa-solid fa-shield-halved w-6 text-lg"></i>
+                <span x-show="open" x-cloak>القيادة الأمنية</span>
+                <span x-show="!open" x-cloak class="ui-tooltip-popover">القيادة الأمنية</span>
+            </a>
+        </li>
+
 
         {{-- فحص بيانات الأجل --}}
         <li>

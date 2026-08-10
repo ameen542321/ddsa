@@ -9,6 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="auth-page auth-page-center">
+    <x-ui.page-loader />
     <div class="auth-shell max-w-sm text-center">
         <div class="auth-icon-danger">⛔</div>
 
