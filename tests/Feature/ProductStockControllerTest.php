@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\InventoryLog;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\User;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
@@ -142,13 +144,23 @@ class ProductStockControllerTest extends TestCase
             'store_id' => $store->id,
             'product_id' => $product->id,
             'type' => Product::INVENTORY_AUDIT_CONFIRMED_TYPE,
-            'business_date' => '2026-07-31',
         ]);
         $this->assertDatabaseHas('stock_movements', [
             'store_id' => $store->id,
             'product_id' => $product->id,
-            'business_date' => '2026-07-31',
         ]);
+
+        $inventoryLog = InventoryLog::query()
+            ->where('product_id', $product->id)
+            ->where('type', Product::INVENTORY_AUDIT_CONFIRMED_TYPE)
+            ->firstOrFail();
+        $stockMovement = StockMovement::query()
+            ->where('product_id', $product->id)
+            ->where('note', 'like', 'تأكيد جرد المنتج%')
+            ->firstOrFail();
+
+        $this->assertSame('2026-07-31', $inventoryLog->business_date->toDateString());
+        $this->assertSame('2026-07-31', $stockMovement->business_date->toDateString());
     }
 
     public function test_inventory_audit_date_field_is_editable_for_owner(): void
