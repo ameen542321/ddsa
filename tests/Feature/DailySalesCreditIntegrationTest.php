@@ -59,6 +59,7 @@ class DailySalesCreditIntegrationTest extends TestCase
             'date' => '2026-07-18',
             'status' => CreditSale::STATUS_PENDING,
             'month' => '2026-07',
+            'added_by' => $owner->id,
         ]);
 
         $this->assertSame($sale->id, $creditSale->resolveLinkedSaleId());
