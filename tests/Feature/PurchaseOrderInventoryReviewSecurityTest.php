@@ -35,7 +35,12 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             ->get(route('accountant.purchase-orders.create'));
 
         $response->assertOk();
-        $response->assertSee('كشاف اختبار حساس');
+
+        $decodedHtml = html_entity_decode($response->getContent(), ENT_QUOTES | ENT_HTML5);
+        $this->assertStringContainsString(
+            json_encode('كشاف اختبار حساس', JSON_THROW_ON_ERROR),
+            $decodedHtml
+        );
         $response->assertDontSee('98765.432', false);
         $response->assertDontSee('8765.43', false);
         $response->assertDontSee('7654.32', false);
