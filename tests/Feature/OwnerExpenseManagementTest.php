@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Expense;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class OwnerExpenseManagementTest extends TestCase

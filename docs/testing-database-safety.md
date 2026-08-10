@@ -18,7 +18,7 @@
 ## الهيكل الموحّد بدل migrations الإنتاجية
 
 اختبارات `RefreshDatabase` لا تشغّل سجل migrations الإنتاجي التاريخي كاملًا. يوجّه
-`tests/TestCase.php` عملية `migrate:fresh` إلى `database/migrations/testing`، ثم يحمل هيكل SQLite
+`Tests\Concerns\RefreshDatabase` عملية `migrate:fresh` إلى `database/migrations/testing`، ثم يحمل هيكل SQLite
 النهائي من `database/testing/sqlite-schema.sql`. هذا الهيكل بلا بيانات ومشتق من مرجع MySQL المرفق،
 مع إضافة أحدث جداول وحقول المشروع.
 

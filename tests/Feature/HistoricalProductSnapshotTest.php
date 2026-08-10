@@ -12,7 +12,7 @@ use App\Models\Store;
 use App\Models\StoreTransfer;
 use App\Models\StoreTransferItem;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class HistoricalProductSnapshotTest extends TestCase

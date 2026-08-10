@@ -6,7 +6,7 @@ use App\Models\Accountant;
 use App\Models\Product;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 

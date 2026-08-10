@@ -8,7 +8,7 @@ use App\Models\SupportSession;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Services\SupportSessionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class SupportSessionFlowTest extends TestCase

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\Accounting\ProfitRecognitionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 

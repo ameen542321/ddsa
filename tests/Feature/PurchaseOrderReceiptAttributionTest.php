@@ -7,7 +7,7 @@ use App\Modules\PurchaseOrders\Models\StorePurchaseOrder;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrderItem;
 use App\Modules\PurchaseOrders\Services\StorePurchaseOrderService;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class PurchaseOrderReceiptAttributionTest extends TestCase

@@ -8,7 +8,7 @@ use App\Models\EmployeeLog;
 use App\Models\Store;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use ReflectionMethod;
 use Tests\TestCase;
 

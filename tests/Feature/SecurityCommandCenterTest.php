@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\SecurityEvent;
 use App\Models\User;
 use App\Services\SecurityEventService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;

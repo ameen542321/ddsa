@@ -7,7 +7,7 @@ use App\Models\Category;
 use App\Models\Plan;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductAdministrativeArchiveTest extends TestCase

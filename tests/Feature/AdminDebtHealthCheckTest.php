@@ -7,7 +7,7 @@ use App\Models\Debt;
 use App\Models\Employee;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Tests\TestCase;

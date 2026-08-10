@@ -9,7 +9,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Store;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class InternalUseControllerTest extends TestCase

@@ -1,7 +1,7 @@
 # هيكل SQLite الموحّد للاختبارات
 
 يستخدم PHPUnit قاعدة `SQLite :memory:` المحمية في `phpunit.xml`. عند استعمال `RefreshDatabase` يوجّه
-`tests/TestCase.php` أمر `migrate:fresh` إلى `database/migrations/testing` بدل سجل migrations الإنتاجي.
+`Tests\Concerns\RefreshDatabase` أمر `migrate:fresh` إلى `database/migrations/testing` بدل سجل migrations الإنتاجي.
 
 ينفذ ملف migration الاختباري `database/testing/sqlite-schema.sql`، وهو هيكل بلا بيانات مشتق من
 `database/reference/carled_schema_2026-08-09.sql` ومكمّل بجداول وحقول مركز الأمن المضافة في
@@ -12,7 +12,7 @@
 - لا يتصل هذا الهيكل بـ MySQL ولا يقرأ إعداداتها.
 - لا يحتوي أوامر `DROP DATABASE` أو بيانات إنتاجية أو `INSERT`.
 - ينشأ داخل ذاكرة عملية الاختبار ويختفي بانتهائها.
-- لا يستخدمه `php artisan migrate` العادي؛ مساره مفعل من `tests/TestCase.php` للاختبارات فقط.
+- لا يستخدمه `php artisan migrate` العادي؛ مساره مفعل من `tests/Concerns/RefreshDatabase.php` للاختبارات فقط.
 
 ## التحديث عند تغيير البنية
 
