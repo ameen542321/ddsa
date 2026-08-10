@@ -41,7 +41,6 @@ class DailySalesProfitDisplayTest extends TestCase
             'roll_length' => 0,
             'is_splittable' => false,
             'items_per_unit' => 1,
-            'piece_price' => 0,
             'min_stock' => 1,
         ]);
 
