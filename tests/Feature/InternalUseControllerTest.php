@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Accountant;
+use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sale;
@@ -80,10 +81,19 @@ class InternalUseControllerTest extends TestCase
             'status' => 'active',
         ]);
 
+        $employee = Employee::create([
+            'store_id' => $store->id,
+            'user_id' => $owner->id,
+            'name' => 'Internal use employee',
+            'phone' => '0500000022',
+            'salary' => 1000,
+            'status' => 'active',
+        ]);
+
         $accountant = Accountant::create([
             'user_id' => $owner->id,
             'store_id' => $store->id,
-            'employee_id' => null,
+            'employee_id' => $employee->id,
             'name' => 'Internal Use Accountant',
             'email' => 'internal-use@example.com',
             'phone' => '0500000001',

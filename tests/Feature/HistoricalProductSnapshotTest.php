@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Accountant;
+use App\Models\Employee;
 use App\Models\Product;
 use App\Models\InventoryLog;
 use App\Models\Purchase;
@@ -23,6 +25,23 @@ class HistoricalProductSnapshotTest extends TestCase
     {
         $owner = User::factory()->create();
         $store = Store::factory()->create(['user_id' => $owner->id]);
+        $employee = Employee::create([
+            'store_id' => $store->id,
+            'user_id' => $owner->id,
+            'name' => 'Historical sale employee',
+            'phone' => '0500000021',
+            'salary' => 1000,
+            'status' => 'active',
+        ]);
+        $accountant = Accountant::create([
+            'employee_id' => $employee->id,
+            'user_id' => $owner->id,
+            'store_id' => $store->id,
+            'name' => 'Historical sale accountant',
+            'email' => 'historical-sale-accountant@example.test',
+            'password' => 'password',
+            'status' => 'active',
+        ]);
         $product = Product::create([
             'store_id' => $store->id,
             'user_id' => $owner->id,
@@ -42,6 +61,7 @@ class HistoricalProductSnapshotTest extends TestCase
         ]);
         $sale = Sale::create([
             'store_id' => $store->id,
+            'accountant_id' => $accountant->id,
             'sale_type' => 'cash',
             'products_total' => 50,
             'final_total' => 50,
