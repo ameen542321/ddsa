@@ -9,7 +9,6 @@ use App\Models\Store;
 use App\Models\User;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrder;
 use App\Modules\PurchaseOrders\Models\StorePurchaseOrderItem;
-use App\Modules\PurchaseOrders\Services\StorePurchaseOrderService;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -56,7 +55,7 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'user_id' => $owner->id,
             'accountant_id' => $otherAccountant->id,
             'supplier_name' => 'مورد الاختبار',
-            'status' => StorePurchaseOrderService::STATUS_DRAFT,
+            'status' => 'draft',
         ]);
 
         $this->actingAs($accountant, 'accountant')
@@ -184,7 +183,9 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'user_id' => $owner->id,
             'accountant_id' => $accountant->id,
             'supplier_name' => 'مورد الاختبار',
-            'status' => StorePurchaseOrderService::STATUS_INVENTORY_SUBMITTED,
+            'status' => 'sent',
+            'workflow_status' => 'returned_after_count',
+            'inventory_review_status' => 'pending_owner_after_count',
             'inventory_submitted_at' => now(),
         ]);
         StorePurchaseOrderItem::create([
@@ -231,7 +232,8 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'store_id' => $store->id,
             'user_id' => $owner->id,
             'accountant_id' => $accountant->id,
-            'status' => StorePurchaseOrderService::STATUS_INVENTORY_RETURNED,
+            'status' => 'draft',
+            'workflow_status' => 'returned_for_count',
             'inventory_review_status' => 'returned_to_accountant',
         ]);
 
@@ -273,7 +275,9 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'user_id' => $owner->id,
             'accountant_id' => $accountant->id,
             'supplier_name' => 'مورد الاختبار',
-            'status' => StorePurchaseOrderService::STATUS_INVENTORY_RETURNED,
+            'status' => 'draft',
+            'workflow_status' => 'returned_for_count',
+            'inventory_review_status' => 'returned_to_accountant',
         ]);
         StorePurchaseOrderItem::create([
             'store_purchase_order_id' => $order->id,
