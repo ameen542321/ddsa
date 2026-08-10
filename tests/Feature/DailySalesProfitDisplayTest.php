@@ -21,6 +21,7 @@ class DailySalesProfitDisplayTest extends TestCase
         $owner = User::factory()->create([
             'role' => 'user',
             'status' => 'active',
+            'welcome_shown' => true,
             'subscription_end_at' => now()->addDays(30),
         ]);
 
