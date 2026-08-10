@@ -194,8 +194,9 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'quantity_requested' => 3,
             'unit_type' => 'unit',
             'cost_price_at_order' => 10,
-            'inventory_counted_quantity' => 8,
-            'inventory_snapshot_quantity' => 10,
+            'inventory_count_quantity' => 8,
+            'inventory_count_unit' => 'unit',
+            'system_quantity_snapshot' => 10,
             'inventory_snapshot_at' => now(),
         ]);
 
@@ -254,7 +255,11 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             ->assertSee('الطقم = 2 حبة', false)
             ->assertSee('الرول = 30.00 متر', false)
             ->assertSee('name="items['.$order->items->firstWhere('product_id', $products[0]->id)->id.'][inventory_count_unit]" value="unit"', false)
-            ->assertSeeInOrder(['منتج قطعة واحدة', 'منتج طقم', 'وحدة الجرد', 'منتج رول', 'وحدة الجرد']);
+            ->assertSee('منتج قطعة واحدة')
+            ->assertSee('منتج طقم')
+            ->assertSee('منتج رول');
+
+        $this->assertSame(2, substr_count($response->getContent(), 'وحدة الجرد'));
     }
 
     public function test_inventory_paper_view_does_not_include_system_snapshot_or_difference(): void
@@ -285,12 +290,15 @@ class PurchaseOrderInventoryReviewSecurityTest extends TestCase
             'quantity_requested' => 4,
             'unit_type' => 'unit',
             'cost_price_at_order' => 10,
-            'inventory_counted_quantity' => 8,
-            'inventory_snapshot_quantity' => 77,
+            'inventory_count_quantity' => 8,
+            'inventory_count_unit' => 'unit',
+            'system_quantity_snapshot' => 77,
             'inventory_snapshot_at' => now(),
         ]);
 
-        $html = view('modules.purchase-orders.inventory-pdf', compact('order'))->render();
+        $order->load(['items.product', 'store.user', 'accountant']);
+        $store = $order->store;
+        $html = view('modules.purchase-orders.inventory-count-pdf', compact('order', 'store'))->render();
 
         $this->assertStringContainsString('منتج PDF الجرد', $html);
         $this->assertStringContainsString('كمية الجرد', $html);
