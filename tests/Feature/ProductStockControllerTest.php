@@ -121,8 +121,10 @@ class ProductStockControllerTest extends TestCase
             'roll_length_at_movement' => null,
             'meters' => null,
             'note' => 'Restock shipment',
-            'business_date' => '2026-08-01',
         ]);
+
+        $movement = $product->stockMovements()->where('note', 'Restock shipment')->firstOrFail();
+        $this->assertSame('2026-08-01', $movement->business_date->toDateString());
     }
 
     public function test_owner_can_confirm_inventory_audit_on_selected_date(): void
