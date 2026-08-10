@@ -30,6 +30,7 @@ class SqliteTestingSchemaTest extends TestCase
         $securityColumns = $database->query('PRAGMA table_info("security_events")')->fetchAll(PDO::FETCH_ASSOC);
         $productColumns = $database->query('PRAGMA table_info("products")')->fetchAll(PDO::FETCH_ASSOC);
         $creditSaleColumns = $database->query('PRAGMA table_info("credit_sales")')->fetchAll(PDO::FETCH_ASSOC);
+        $saleColumns = $database->query('PRAGMA table_info("sales")')->fetchAll(PDO::FETCH_ASSOC);
 
         $this->assertContains('must_reset_password', array_column($userColumns, 'name'));
         $this->assertContains('verification_note', array_column($securityColumns, 'name'));
@@ -37,6 +38,13 @@ class SqliteTestingSchemaTest extends TestCase
         $this->assertContains('response_expires_at', array_column($securityColumns, 'name'));
         $this->assertContains('piece_price', array_column($productColumns, 'name'));
         $this->assertContains('added_by', array_column($creditSaleColumns, 'name'));
+
+        $saleAccountantColumn = current(array_filter(
+            $saleColumns,
+            static fn (array $column): bool => $column['name'] === 'accountant_id'
+        ));
+        $this->assertIsArray($saleAccountantColumn);
+        $this->assertSame(1, (int) $saleAccountantColumn['notnull']);
         $this->assertSame(0, (int) $database->query('SELECT COUNT(*) FROM users')->fetchColumn());
     }
 }

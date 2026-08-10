@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Accountant;
 use App\Models\CreditSale;
 use App\Models\Employee;
 use App\Models\Sale;
@@ -26,10 +27,20 @@ class DailySalesCreditIntegrationTest extends TestCase
             'salary' => 1000,
             'status' => 'active',
         ]);
+        $accountant = Accountant::create([
+            'user_id' => $owner->id,
+            'store_id' => $store->id,
+            'name' => 'Daily sales test accountant',
+            'email' => 'daily-credit-accountant@example.com',
+            'phone' => '0500000013',
+            'password' => 'password',
+            'status' => 'active',
+        ]);
 
         $sale = Sale::create([
             'store_id' => $store->id,
             'employee_id' => $employee->id,
+            'accountant_id' => $accountant->id,
             'sale_type' => 'credit',
             'products_total' => 80,
             'tax_rate' => 0,

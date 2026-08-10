@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Accountant;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -26,6 +27,15 @@ class DailySalesProfitDisplayTest extends TestCase
             'user_id' => $owner->id,
             'status' => 'active',
         ]);
+        $accountant = Accountant::create([
+            'user_id' => $owner->id,
+            'store_id' => $store->id,
+            'name' => 'Daily sales test accountant',
+            'email' => 'daily-profit-accountant@example.com',
+            'phone' => '0500000014',
+            'password' => 'password',
+            'status' => 'active',
+        ]);
 
         $product = Product::create([
             'store_id' => $store->id,
@@ -48,7 +58,7 @@ class DailySalesProfitDisplayTest extends TestCase
         $sale = Sale::create([
             'store_id' => $store->id,
             'employee_id' => null,
-            'accountant_id' => null,
+            'accountant_id' => $accountant->id,
             'sale_type' => 'cash',
             'products_total' => 20,
             'tax_rate' => 0,
