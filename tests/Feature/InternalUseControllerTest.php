@@ -140,7 +140,9 @@ class InternalUseControllerTest extends TestCase
         $saleItem = SaleItem::query()->firstOrFail();
 
         $this->assertSame('internal_use', $sale->sale_type);
-        $this->assertSame(60.0, (float) $sale->total);
+        $this->assertSame(35.0, (float) $sale->total);
+        $this->assertSame(17.5, (float) $saleItem->price);
+        $this->assertSame(35.0, (float) $saleItem->total);
         $this->assertSame(2.0, (float) $saleItem->quantity);
         $this->assertSame('piece', $saleItem->unit_type);
 
