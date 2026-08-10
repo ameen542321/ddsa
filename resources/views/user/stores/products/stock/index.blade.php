@@ -303,13 +303,13 @@
                 <tbody class="divide-y divide-ui-border">
                     @forelse($movements as $move)
                         @php
-                            $movementUnitLabel = \App\Support\ProductQuantityFormatter::inventoryDefaultUnit($product);
+                            $movementUnitLabel = $move->snapshotUnitLabel($product);
                             $hasPosReference = preg_match('/POS\s*#(\d+)/u', (string) $move->note, $posMatch);
-                            $moveQty = \App\Support\ProductQuantityFormatter::inventoryQuantity($product, (float) $move->quantity);
+                            $moveQty = $move->quantityInSnapshotUnit((float) $move->quantity, $product);
                             $hasBalanceSnapshot = (!is_null($move->balance_before) && !is_null($move->balance_after))
                                 || (!is_null($move->roll_length_at_movement) && !is_null($move->meters));
-                            $beforeQty = $hasBalanceSnapshot ? \App\Support\ProductQuantityFormatter::inventoryQuantity($product, $move->previous_balance) : null;
-                            $afterQty = $hasBalanceSnapshot ? \App\Support\ProductQuantityFormatter::inventoryQuantity($product, $move->current_balance) : null;
+                            $beforeQty = $hasBalanceSnapshot ? $move->quantityInSnapshotUnit($move->previous_balance, $product) : null;
+                            $afterQty = $hasBalanceSnapshot ? $move->quantityInSnapshotUnit($move->current_balance, $product) : null;
                             $isAuditConfirmation = str_starts_with((string) $move->note, 'تأكيد جرد المنتج');
                             $isPosSale = $move->operation_label === 'بيع' && $hasPosReference;
                             $movementOperationLabel = $isPosSale
